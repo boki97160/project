@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-original=cv2.imread('s4.png')
+original=cv2.imread('./src/oceanbound_key.png')
 
 img = cv2.cvtColor(original,cv2.COLOR_RGB2GRAY)
 ret, src= cv2.threshold(img,250,255,cv2.THRESH_BINARY_INV)
