@@ -5,6 +5,7 @@
 *.jfif
 *.pptx
 meeting/
+pattern/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
