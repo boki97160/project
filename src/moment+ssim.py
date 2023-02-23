@@ -1,16 +1,17 @@
-import cv2
-import numpy as np
-from sewar.full_ref import ssim#from skimage.metrics import structural_similarity
 
-scale= 30
-#key_content=["T4F","ssk","T3B","C4B","k","yo","T3F","p","CDD","T4B","k1tbl/p1tbl","CO/BO"]
-key_content=["k","yo","k2tog","kfbf","cdd","k"]
-#key_content = ["k","p","yo","kfb","k2tog","ssk","cdd","k","k"]
-#key_content=["k","p","k2tog","ssk","yo","cdd","kfb","k"]
+from sewar.full_ref import ssim
+from scipy.spatial import distance as dist
+import numpy as np
+import mahotas
+import cv2
+import imutils
+
+scale = 30
 key_list=[]
+key_content=["k","yo","k2tog","kfbf","cdd","k"]
 
 def find_stats(original, scale):
-    img = cv2.cvtColor(original,cv2.COLOR_RGB2GRAY)
+    img = cv2.cvtColor(original,cv2.COLOR_BGR2GRAY)
     ret, src= cv2.threshold(img,250,255,cv2.THRESH_BINARY_INV)
     kernel = cv2.getStructuringElement(cv2.MORPH_CROSS,(scale,1))
     result1 = cv2.morphologyEx(src, cv2.MORPH_OPEN, kernel)
@@ -21,44 +22,47 @@ def find_stats(original, scale):
     stats = stats[2:]
     return stats
 
+
 def compare_grid(grid):
-    ind=0
-    max1=0
+    mind = []
+    pos = []
+    sim = []
     size = min(grid.shape[0],grid.shape[1])
     if size%2==0:
         size-=1
-    grid = cv2.resize(grid,(size,size),interpolation=cv2.INTER_AREA)
+    grid= cv2.resize(grid,(size,size),interpolation=cv2.INTER_AREA)
     for k in range(len(key_list)):
         key=cv2.resize(key_list[k],(size,size),interpolation=cv2.INTER_AREA)
-        sim, _= ssim(grid,key)
-        if sim>max1:
-            max1=sim
-            ind=k
-    return ind
+        fk = zernike(key)
+        fg = zernike(grid)
+        d = np.linalg.norm(fk - fg)
+        if len(mind) < 2:
+            mind.append(d)
+            pos.append(k)
+            score,_ = ssim(key,grid)
+            sim.append(score)
+        elif d < max(mind):
+            arg = np.argmax(mind)
+            mind[arg] = d 
+            pos[arg] = k 
+            score,_ = ssim(key,grid)
+            sim[arg]=score
+    return pos[np.argmax(sim)]
 
-def print_instruction(row):
-    j=1
-    end_str=', '
-    for i in range(len(row)-1):
-        if i== len(row)-2:
-            end_str='\n'
-        if row[i] == row[i+1] and (row[i]=='k' or row[i]=='p'):
-            j+=1
-        else:
-            if row[i]=='k' or row[i]=='p':
-                print(row[i]+str(j),end=end_str)
-                j=1
-            else:
-                print(row[i],end=end_str)
+def zernike(img): 
+    gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY) 
+    gray = 255-gray
+    features = mahotas.features.zernike_moments(gray,min(img.shape[0],img.shape[1])/2,degree=8)
+    return features
 
 original = cv2.imread('./src/oceanbound_key.png')
 key = find_stats(original,scale)
-key_list = []
 
 i=1
 for x,y,w,h,area in key:
     block = original[y:y+h,x:x+w]
     key_list.append(block)
+    cv2.imwrite(str(i)+'.png',block)
     i+=1
 
 original = cv2.imread('./src/oceanbound_chart.png')
@@ -69,11 +73,6 @@ last_y=-1
 
 list=[]
 infor=[]
-
-
-
-print("with ws? (y/n)")
-s = input()
 
 
 for now in grid:
@@ -96,17 +95,5 @@ for i in range(len(infor)):
         x,y,w,h,area = infor[i][j]
         g=original[y:y+h,x:x+w]
         content = key_content[compare_grid(g)]
-        if (i+1)%2 == 0 and s=="y":
-            if content == "p":
-                content = "k"
-            elif  content == "k":
-                content = "p"
         list.append(content)
-    if s == "y" and (i+1)%2 ==0:
-        list.reverse()
-    list.append(" ")
-    if  s=="y":
-        print("row"+str(i+1)+":",end=" ")
-    else:
-        print("row"+str(2*i+1)+": ", end=" ")
-    print_instruction(list)
+    print(list)

@@ -15,7 +15,7 @@ def describe_shapes(image, title):
 	gray = (255-gray)
 	#blurred = cv2.GaussianBlur(gray, (3, 3), 0)
 	thresh = cv2.threshold(gray, 50, 255, cv2.THRESH_BINARY)[1]
-
+	cv2.imwrite('thresh.png',thresh)
 	# perform a series of dilations and erosions to close holes
 	# in the shapes
 	thresh = cv2.dilate(thresh, None, iterations=4)
