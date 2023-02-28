@@ -1,15 +1,23 @@
 
 from sewar.full_ref import ssim
-from scipy.spatial import distance as dist
+import scipy
 import numpy as np
 import mahotas
 import cv2
 import imutils
-
+#f=open("./src/wintermute_written.txt","w+")
+m = 10000
 scale = 30
 key_list=[]
-key_content=["k","yo","k2tog","kfbf","cdd","k"]
+#secretkeeper
+#key_content=["k","p","yo","kfb","k2tog","ssk","cdd","k","k"] 
 
+#wintermute
+#key_content= ["T4F","ssk","T3B","C4B","k","yo","T3F","p","CDD","T4B","k1tbl","CO/BO"]
+#oceanbound
+#key_content=["k","yo","k2tog","kfbf","cdd","k","k"]
+#nurmilintu
+key_content = ["","k","k","k","p","k","kfb","k","yo","k","k2tog","k","ssk","k","sk2p","k"]
 def find_stats(original, scale):
     img = cv2.cvtColor(original,cv2.COLOR_BGR2GRAY)
     ret, src= cv2.threshold(img,250,255,cv2.THRESH_BINARY_INV)
@@ -23,15 +31,30 @@ def find_stats(original, scale):
     return stats
 
 
+def count_grid(grid):
+    c=0
+    grid = cv2.cvtColor(grid,cv2.COLOR_BGR2GRAY)
+    for i in range(len(grid)):
+        for j in range(len(grid[i])):
+            if(grid[i][j]>=250):
+                c+=1
+    return( c>grid.shape[0]*grid.shape[1]*0.95)
+         
+
 def compare_grid(grid):
     mind = []
-    pos = []
     sim = []
+    if grid.shape[0]<0.75*m or grid.shape[1]<0.75*m:
+        return ""
+    pos=[]
     size = min(grid.shape[0],grid.shape[1])
     if size%2==0:
         size-=1
     grid= cv2.resize(grid,(size,size),interpolation=cv2.INTER_AREA)
-    for k in range(len(key_list)):
+    
+    if(count_grid(grid)):
+        return "k"
+    for k in range(len(key_list)):    
         key=cv2.resize(key_list[k],(size,size),interpolation=cv2.INTER_AREA)
         fk = zernike(key)
         fg = zernike(grid)
@@ -47,7 +70,7 @@ def compare_grid(grid):
             pos[arg] = k 
             score,_ = ssim(key,grid)
             sim[arg]=score
-    return pos[np.argmax(sim)]
+    return key_content[pos[np.argmax(sim)]]
 
 def zernike(img): 
     gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY) 
@@ -55,7 +78,7 @@ def zernike(img):
     features = mahotas.features.zernike_moments(gray,min(img.shape[0],img.shape[1])/2,degree=8)
     return features
 
-original = cv2.imread('./src/oceanbound_key.png')
+original = cv2.imread('./src/nurmilintu_key.png')
 key = find_stats(original,scale)
 
 i=1
@@ -65,8 +88,10 @@ for x,y,w,h,area in key:
     cv2.imwrite(str(i)+'.png',block)
     i+=1
 
-original = cv2.imread('./src/oceanbound_chart.png')
+
+original = cv2.imread('./src/nurmilintu_chart.png')
 grid = find_stats(original,scale)
+
 
 dist = 12
 last_y=-1
@@ -75,8 +100,10 @@ list=[]
 infor=[]
 
 
+hmean = []
 for now in grid:
     x,y,w,h,area = now
+    hmean.append(h)
     if(abs(y-last_y)>dist):
         last_y=y
         list.sort(reverse=True,key=lambda x:(x[0]))
@@ -84,16 +111,26 @@ for now in grid:
         list=[]
     list.append(now)
 
+m = np.mean(hmean)
 list.sort(reverse=True,key=lambda x:(x[0]))
 infor.append(list)
 infor = infor[::-1]
 
 pattern=[]
 for i in range(len(infor)):
+    #written = f.readline()[:-1]
     list=[]
+    cmp=""
     for j in range(len(infor[i])):
         x,y,w,h,area = infor[i][j]
         g=original[y:y+h,x:x+w]
-        content = key_content[compare_grid(g)]
+        
+        content = compare_grid(g)
         list.append(content)
-    print(list)
+    cmp+=str(i+1)+": "
+    for l in range(len(list)):
+        cmp+=list[l]+", "
+    print(cmp)
+    #print(cmp == written)
+    #f.write(cmp+"\n")
+#f.close()

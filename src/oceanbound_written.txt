@@ -1,0 +1,9 @@
+1: k, k2tog, k, k, k, yo, k, k, cdd, k, k, yo, k, kfbf, k, 
+2: k, k2tog, k, k, yo, k, k, cdd, k, k, yo, k, k, k, kfbf, k, 
+3: k, k2tog, k2tog, k, k, yo, k, yo, k, k, cdd, k, k, yo, k, kfbf, k, 
+4: k, cdd, k, k, yo, k, yo, k, k, cdd, k, k, yo, k, yo, k2tog, kfbf, k, 
+5: k, kfbf, k, k, k2tog, k, k, yo, k, yo, k, k, cdd, k, k, yo, k, kfbf, k, 
+6: k, k2tog, k, k2tog, k, k, yo, k, yo, k, k, cdd, k, k, yo, k, k, k, kfbf, k, 
+7: k, k2tog, k, yo, k, k, cdd, k, k, yo, k, yo, k, k, cdd, k, k, yo, k, kfbf, k, 
+8: k, k2tog, yo, k, k, cdd, k, k, yo, k, yo, k, k, cdd, k, k, yo, k, yo, k2tog, kfbf, k, 
+9: 
