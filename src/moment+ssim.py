@@ -1,4 +1,3 @@
-
 from sewar.full_ref import ssim
 import scipy
 import numpy as np
@@ -13,11 +12,11 @@ key_list=[]
 #key_content=["k","p","yo","kfb","k2tog","ssk","cdd","k","k"] 
 
 #wintermute
-#key_content= ["T4F","ssk","T3B","C4B","k","yo","T3F","p","CDD","T4B","k1tbl","CO/BO"]
+key_content= ["T4F","ssk","T3B","C4B","k","yo","T3F","p","CDD","T4B","k1tbl","CO/BO"]
 #oceanbound
 #key_content=["k","yo","k2tog","kfbf","cdd","k","k"]
 #nurmilintu
-key_content = ["","k","k","k","p","k","kfb","k","yo","k","k2tog","k","ssk","k","sk2p","k"]
+#key_content = ["","k","k","k","p","k","kfb","k","yo","k","k2tog","k","ssk","k","sk2p","k"]
 def find_stats(original, scale):
     img = cv2.cvtColor(original,cv2.COLOR_BGR2GRAY)
     ret, src= cv2.threshold(img,250,255,cv2.THRESH_BINARY_INV)
@@ -54,7 +53,9 @@ def compare_grid(grid):
     
     if(count_grid(grid)):
         return "k"
-    for k in range(len(key_list)):    
+    for k in range(len(key_list)): 
+        if(count_grid(key_list[k])):
+            continue   
         key=cv2.resize(key_list[k],(size,size),interpolation=cv2.INTER_AREA)
         fk = zernike(key)
         fg = zernike(grid)
@@ -78,7 +79,7 @@ def zernike(img):
     features = mahotas.features.zernike_moments(gray,min(img.shape[0],img.shape[1])/2,degree=8)
     return features
 
-original = cv2.imread('./src/nurmilintu_key.png')
+original = cv2.imread('./src/wintermute_key.png')
 key = find_stats(original,scale)
 
 i=1
@@ -89,7 +90,7 @@ for x,y,w,h,area in key:
     i+=1
 
 
-original = cv2.imread('./src/nurmilintu_chart.png')
+original = cv2.imread('./src/wintermute_chart.png')
 grid = find_stats(original,scale)
 
 
@@ -116,6 +117,7 @@ list.sort(reverse=True,key=lambda x:(x[0]))
 infor.append(list)
 infor = infor[::-1]
 
+row=1
 pattern=[]
 for i in range(len(infor)):
     #written = f.readline()[:-1]
@@ -123,14 +125,15 @@ for i in range(len(infor)):
     cmp=""
     for j in range(len(infor[i])):
         x,y,w,h,area = infor[i][j]
-        g=original[y:y+h,x:x+w]
-        
+        g=original[y:y+h,x:x+w]    
         content = compare_grid(g)
         list.append(content)
-    cmp+=str(i+1)+": "
+    cmp+=str(row)+": "
     for l in range(len(list)):
-        cmp+=list[l]+", "
+        if(list[l]!=''):
+            cmp+=list[l]+", "
     print(cmp)
+    row+=1
     #print(cmp == written)
     #f.write(cmp+"\n")
 #f.close()

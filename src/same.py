@@ -1,14 +1,15 @@
 import cv2
 import numpy as np
 from skimage.measure import label
-from skimage.metrics import structural_similarity
-
+#from skimage.metrics import structural_similarity
+#from sewar.full_ref import ssim
 scale= 30
 #key_content=["T4F","ssk","T3B","C4B","k","yo","T3F","p","CDD","T4B","k1tbl/p1tbl","CO/BO"]
 key_content=["k","yo","k2tog","kfbf","cdd","k"]
 #key_content = ["k","p","yo","kfb","k2tog","ssk","cdd","k","k"]
 #key_content = ["k","k","k","k","p","k","kfb","k","yo","k","k2tog","k","ssk","k","sl1-k2tog-psso","k"]
 key_list=[]
+ssim = 0
 #key_content=["k","p","k2tog","ssk","yo","cdd","kfb","k"]
 #key_content = ["k","yo","k2tog","kfbf","cdd","k"]
 #key_stitch = [0,0,0,0,0,0,1,0,1,0,-1,0,-1,0,-2,0]
@@ -26,10 +27,11 @@ def find_stats(original, scale, type):
     result2 = cv2.morphologyEx(src, cv2.MORPH_OPEN, kernel)
     table = cv2.bitwise_or(result1,result2)
     if type=="chart":
-        #table = get_lcc(table)
+        table = get_lcc(table)
         cv2.imwrite("table.png",table)
     else:
-        cv2.imwrite('table.png',table)
+        table = table
+        #cv2.imwrite('table.png',table)
     ret,labels,stats,centroids = cv2.connectedComponentsWithStats(~table,connectivity=4,ltype=cv2.CV_32S)
     stats = stats[2:]
     return stats
@@ -56,7 +58,7 @@ def compare_grid(grid):
     for k in range(len(key_list)):
         grid = cv2.resize(grid,(size,size),interpolation=cv2.INTER_AREA)
         key=cv2.resize(key_list[k],(size,size),interpolation=cv2.INTER_AREA)
-        ssim= structural_similarity(grid,key,win_size =size, multichannel=True)
+        #ssim= structural_similarity(grid,key,win_size =size, multichannel=True)
         if ssim>max1:
             max1=ssim
             ind=k
@@ -77,7 +79,7 @@ def print_instruction(row):
             else:
                 print(row[i],end=end_str)
 
-original = cv2.imread('oceanbound_key.png')
+original = cv2.imread('./src/nurmilintu_key.png')
 key = find_stats(original,scale,"key")
 key_list = []
 
@@ -88,7 +90,7 @@ for x,y,w,h,area in key:
     cv2.imwrite('block'+str(i)+'.png',block)
     i+=1
 
-original = cv2.imread('1.png')
+original = cv2.imread('./src/nurmilintu_chart.png')
 grid = find_stats(original,scale,"chart")
 
 dist = 12

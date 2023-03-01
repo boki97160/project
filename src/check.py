@@ -1,10 +1,10 @@
 import cv2
 import numpy as np
 from PIL import Image
-import imagehash
-from skimage.metrics import structural_similarity
+#import imagehash
+#from skimage.metrics import structural_similarity
 
-original=cv2.imread('s7.png')
+original=cv2.imread('./src/nurmilintu_key.png')
 
 img = cv2.cvtColor(original,cv2.COLOR_RGB2GRAY)
 ret, src= cv2.threshold(img,250,255,cv2.THRESH_BINARY_INV)
@@ -16,7 +16,6 @@ kernel = cv2.getStructuringElement(cv2.MORPH_CROSS,(1,scale))
 result2 = cv2.morphologyEx(src, cv2.MORPH_OPEN, kernel)
 intersect = cv2.bitwise_and(result1,result2)
 table = cv2.bitwise_or(result1,result2)
-
 
 ret,labels,stats,centroids = cv2.connectedComponentsWithStats(~table,connectivity=4,ltype=cv2.CV_32S)
 stats = stats[2:]
@@ -28,7 +27,7 @@ for x,y,w,h,area in stats: #0,1 = background
     key_number+=1
 
 
-original=cv2.imread('screenshot.png')
+original=cv2.imread('./src/nurmilintu_chart.png')
 
 img = cv2.cvtColor(original,cv2.COLOR_RGB2GRAY)
 ret, src= cv2.threshold(img,250,255,cv2.THRESH_BINARY_INV)
@@ -40,7 +39,8 @@ kernel = cv2.getStructuringElement(cv2.MORPH_CROSS,(1,scale))
 result2 = cv2.morphologyEx(src, cv2.MORPH_OPEN, kernel)
 intersect = cv2.bitwise_and(result1,result2)
 table = cv2.bitwise_or(result1,result2)
-
+cv2.imwrite('table.png',table)
+cv2.imwrite('intersect.png',table)
 
 ret,labels,stats,centroids = cv2.connectedComponentsWithStats(~table,connectivity=4,ltype=cv2.CV_32S)
 stats = stats[2:]
