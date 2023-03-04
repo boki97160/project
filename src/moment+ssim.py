@@ -12,11 +12,11 @@ key_list=[]
 #key_content=["k","p","yo","kfb","k2tog","ssk","cdd","k","k"] 
 
 #wintermute
-key_content= ["T4F","ssk","T3B","C4B","k","yo","T3F","p","CDD","T4B","k1tbl","CO/BO"]
+#key_content= ["T4F","ssk","T3B","C4B","k","yo","T3F","p","CDD","T4B","k1tbl","CO/BO"]
 #oceanbound
 #key_content=["k","yo","k2tog","kfbf","cdd","k","k"]
 #nurmilintu
-#key_content = ["","k","k","k","p","k","kfb","k","yo","k","k2tog","k","ssk","k","sk2p","k"]
+key_content = ["","k","k","k","p","k","kfb","k","yo","k","k2tog","k","ssk","k","sk2p","k"]
 def find_stats(original, scale):
     img = cv2.cvtColor(original,cv2.COLOR_BGR2GRAY)
     ret, src= cv2.threshold(img,250,255,cv2.THRESH_BINARY_INV)
@@ -79,7 +79,7 @@ def zernike(img):
     features = mahotas.features.zernike_moments(gray,min(img.shape[0],img.shape[1])/2,degree=8)
     return features
 
-original = cv2.imread('./src/wintermute_key.png')
+original = cv2.imread('./src/nurmilintu_key.png')
 key = find_stats(original,scale)
 
 i=1
@@ -90,7 +90,7 @@ for x,y,w,h,area in key:
     i+=1
 
 
-original = cv2.imread('./src/wintermute_chart.png')
+original = cv2.imread('./src/nurmilintu_chart.png')
 grid = find_stats(original,scale)
 
 
