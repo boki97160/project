@@ -3,12 +3,14 @@ import numpy as np
 from sewar.full_ref import ssim#from skimage.metrics import structural_similarity
 
 scale= 30
-#key_content=["T4F","ssk","T3B","C4B","k","yo","T3F","p","CDD","T4B","k1tbl/p1tbl","CO/BO"]
-key_content=["k","yo","k2tog","kfbf","cdd","k"]
+key_content=["T4F","ssk","T3B","C4B","k","yo","T3F","p","CDD","T4B","k1tbl","CO/BO"]
+#key_content=["k","yo","k2tog","kfbf","cdd","k"]
 #key_content = ["k","p","yo","kfb","k2tog","ssk","cdd","k","k"]
 #key_content=["k","p","k2tog","ssk","yo","cdd","kfb","k"]
 key_list=[]
+#key_content = ["","k","k","k","p","k","kfb","k","yo","k","k2tog","k","ssk","k","sk2p","k"]
 
+f=open("./src/wintermute_written.txt","r")
 def find_stats(original, scale):
     img = cv2.cvtColor(original,cv2.COLOR_RGB2GRAY)
     ret, src= cv2.threshold(img,250,255,cv2.THRESH_BINARY_INV)
@@ -51,7 +53,7 @@ def print_instruction(row):
             else:
                 print(row[i],end=end_str)
 
-original = cv2.imread('./src/oceanbound_key.png')
+original = cv2.imread('./src/wintermute_key.png')
 key = find_stats(original,scale)
 key_list = []
 
@@ -61,7 +63,7 @@ for x,y,w,h,area in key:
     key_list.append(block)
     i+=1
 
-original = cv2.imread('./src/oceanbound_chart.png')
+original = cv2.imread('./src/wintermute_chart.png')
 grid = find_stats(original,scale)
 
 dist = 12
@@ -96,17 +98,28 @@ for i in range(len(infor)):
         x,y,w,h,area = infor[i][j]
         g=original[y:y+h,x:x+w]
         content = key_content[compare_grid(g)]
-        if (i+1)%2 == 0 and s=="y":
+        """if (i+1)%2 == 0 and s=="y":
             if content == "p":
                 content = "k"
             elif  content == "k":
-                content = "p"
+                content = "p"""
         list.append(content)
-    if s == "y" and (i+1)%2 ==0:
-        list.reverse()
+    """if s == "y" and (i+1)%2 ==0:
+        list.reverse()"""
     list.append(" ")
+    row=0
     if  s=="y":
         print("row"+str(i+1)+":",end=" ")
+        row=i+1
     else:
         print("row"+str(2*i+1)+": ", end=" ")
+        row=2*i+1
     print_instruction(list)
+    if len(list)>0:
+        written = f.readline()[:-1]
+        row+=1
+        ws = written[3:].split(', ')
+        for w in range(len(ws)):
+            if ws[w]!=list[w]:
+                print(ws[w]+" / "+list[w])
+    #print_instruction(list)

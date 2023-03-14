@@ -1,0 +1,16 @@
+1: ssk, yo, yo, k, k1tbl, p, p, p, p, k, k, k, k, p, p, p, k, k, p, p, p, p, p, p, k, k, p, p, p, k, k, k, k, p, p, p, p, k1tbl, CDD
+2: yo, p, p, k, k, k1tbl, p, p, p, p, k, k, k, k, p, p, p, k, k, p, p, p, p, p, p, k, k, p, p, p, k, k, k, k, p, p, p, p, k1tbl, k
+3: k1tbl, k, k, k, k, k1tbl, p, p, p, p, C4B, p, p, p, T3F, p, p, p, p, T3B, p, p, p, C4B, p, p, p, p, k1tbl, CDD
+4: CO/BO, CO/BO, k, k, k1tbl, p, p, p, p, k, k, k, k, p, p, p, p, k, k, p, p, p, p, k, k, p, p, p, p, k, k, k, k, p, p, p, p, k1tbl, k
+5: ssk, yo, yo, k, k1tbl, p, p, T4B, T4F, p, p, T4F, T4B, p, p, T4B, T4F, p, p, k1tbl, CDD
+6: yo, p, p, k, k, k1tbl, p, p, k, k, p, p, p, p, k, k, p, p, p, p, k, k, k, k, p, p, p, p, k, k, p, p, p, p, k, k, p, p, k1tbl, k
+7: k1tbl, k, k, k, k, k1tbl, p, T3B, p, p, p, p, T3F, p, p, p, C4B, p, p, p, T3B, p, p, p, p, T3F, p, k1tbl, CDD
+8: CO/BO, CO/BO, k, k, k1tbl, p, k, k, p, p, p, p, p, p, k, k, p, p, p, k, k, k, k, p, p, p, k, k, p, p, p, p, p, p, k, k, p, k1tbl, k
+9: ssk, yo, yo, k, k1tbl, p, k, k, p, p, p, p, p, p, k, k, p, p, p, k, k, k, k, p, p, p, k, k, p, p, p, p, p, p, k, k, p, k1tbl, CDD
+10: yo, p, p, k, k, k1tbl, p, k, k, p, p, p, p, p, p, k, k, p, p, p, k, k, k, k, p, p, p, k, k, p, p, p, p, p, p, k, k, p, k1tbl, k
+11: k1tbl, k, k, k, k, k1tbl, p, T3F, p, p, p, p, T3B, p, p, p, C4B, p, p, p, T3F, p, p, p, p, T3B, p, k1tbl, CDD
+12: CO/BO, CO/BO, k, k, k1tbl, p, p, k, k, p, p, p, p, k, k, p, p, p, p, k, k, k, k, p, p, p, p, k, k, p, p, p, p, k, k, p, p, k1tbl, k
+13: ssk, yo, yo, k, k1tbl, p, p, T4F, T4B, p, p, T4B, T4F, p, p, T4F, T4B, p, p, k1tbl, CDD
+14: yo, p, p, k, k, k1tbl, p, p, p, p, k, k, k, k, p, p, p, p, k, k, p, p, p, p, k, k, p, p, p, p, k, k, k, k, p, p, p, p, k1tbl, k
+15: k1tbl, k, k, k, k, k1tbl, p, p, p, p, C4B, p, p, p, T3B, p, p, p, p, T3F, p, p, p, C4B, p, p, p, p, k1tbl, CDD
+16: CO/BO, CO/BO, k, k, k1tbl, p, p, p, p, k, k, k, k, p, p, p, k, k, p, p, p, p, p, p, k, k, p, p, p, k, k, k, k, p, p, p, p, k1tbl, k

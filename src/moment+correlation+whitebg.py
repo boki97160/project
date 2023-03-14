@@ -2,11 +2,11 @@ from sewar.full_ref import ssim
 import numpy as np
 import mahotas
 import cv2
-from scipy.spatial.distance import directed_hausdorff
+from scipy.spatial.distance import correlation, cdist,cosine,euclidean
 import math
 import heapq
 
-project_name = "nurmilintu"
+project_name = "secretkeeper"
 #f=open("./src/"+project_name+"_written.txt","w+")
 f=open("./src/"+project_name+"_written.txt","r")
 size = 1000
@@ -16,7 +16,6 @@ key_zernike=[]
 keys=[[] for i in range(10)]
 #secretkeeper
 key_content=["k","p","yo","kfb","k2tog","ssk","cdd","k","k"] 
-
 #wintermute
 #key_content= ["T4F","ssk","T3B","C4B","k","yo","T3F","p","CDD","T4B","k1tbl","CO/BO"]
 #oceanbound
@@ -55,18 +54,31 @@ def check_blank(grid):
                 c+=1
     return( c>grid.shape[0]*grid.shape[1]*0.95)
 
+
 def cmpsim(grid,width):
     sim =[]
     grid = cv2.resize(grid,(size*width,size))
+    
     fg = zernike(addbg(grid,width))
     for key in keys[width]:
         fk = key['moments']
-        sim.append({'abbr':key['abbr'],'dist':np.linalg.norm(fk - fg),'ssim':ssim(key['symbol'],grid)})
-    #sim.sort(key = lambda x : x[1])
-    smallest = heapq.nsmallest(2,sim,key=lambda x:x['dist'])
-    #smallest.sort(key = lambda x : x['ssim'], reverse=True)
-    smallest.sort(key = lambda x : x['ssim'], reverse = True)
+        sim.append({'abbr':key['abbr'],'dist':np.linalg.norm(fk - fg),'cos':cos(key['symbol'],grid)})
+    smallest = heapq.nsmallest(4,sim,key=lambda x:x['dist'])
+    smallest.sort(key = lambda x:x['cos'],reverse=True)
+    #print([g['abbr'] for g in smallest])
+    #print([g['cos'] for g in smallest])
     return smallest[0]['abbr']
+    #return 'k'
+
+def cos(key,grid):
+    sum=0
+    for i in range(grid.shape[0]):
+        sum+=1-cosine(grid[i],key[i])
+    tk = np.transpose(key)
+    tg = np.transpose(grid)
+    for i in range(grid.shape[0]):
+        sum+=1-cosine(grid[i],key[i])
+    return sum
 
 def compare_grid(grid):
     if grid.shape[0]<0.8*size or grid.shape[1]<0.8*size:
@@ -117,7 +129,7 @@ size=round(np.mean(grid[:,3]))
 for k in range(len(key_list)):
     key = key_list[k]
     width = round(key.shape[1]/key.shape[0])
-    if width>10:
+    if width > 10:
         continue
     if check_blank(key):
         keys[width].append({'abbr':key_content[k],'symbol':cv2.resize(key,(size*width,size)),'moments':1e7})

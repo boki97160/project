@@ -1,18 +1,18 @@
-1: k, kfb, k, k, k2tog, yo, k, yo, ssk, k, k, k, k, k2tog, k, 
-2: p, kfb, p, p, p, p, p, p, p, p, p, p, p, p, p, 
-3: k, kfb, k, k, k, k2tog, yo, k, k, k, yo, ssk, k, k, k2tog, k, 
-4: p, kfb, p, p, p, p, p, p, p, p, p, p, p, p, p, p, 
-5: k, kfb, k, k, yo, ssk, k2tog, yo, k, yo, sk2p, yo, k, yo, ssk, k2tog, k, 
-6: p, kfb, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p, 
-7: k, kfb, k, k, yo, ssk, k, k, k, k, k2tog, yo, k, yo, ssk, k, k2tog, k, 
-8: p, kfb, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p, 
-9: k, kfb, k2tog, yo, k, k, k, yo, ssk, k, k, k2tog, yo, k, k, k, k, k2tog, k, 
-10: p, kfb, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p, 
-11: k, kfb, k, k2tog, yo, k, yo, sk2p, yo, k, yo, ssk, k2tog, yo, k, yo, sk2p, yo, k2tog, k, 
-12: p, kfb, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p, 
-13: k, kfb, k, k, k, k, k, k2tog, yo, k, yo, ssk, k, k, k, k, k2tog, yo, k, k2tog, k, 
-14: p, kfb, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p, 
-15: k, kfb, k, k, yo, ssk, k, k, k2tog, yo, k, k, k, yo, ssk, k, k, k2tog, yo, k, k2tog, k, 
-16: p, kfb, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p, 
-17: k, kfb, k, yo, sk2p, yo, k, yo, ssk, k2tog, yo, k, yo, sk2p, yo, k, yo, ssk, k2tog, yo, k, k2tog, k, 
-18: p, kfb, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p, 
+1: k, kfb, k, k, k2tog, yo, k, yo, ssk, k, k, k, k, k2tog, k
+2: p, kfb, p, p, p, p, p, p, p, p, p, p, p, p, p
+3: k, kfb, k, k, k, k2tog, yo, k, k, k, yo, ssk, k, k, k2tog, k
+4: p, kfb, p, p, p, p, p, p, p, p, p, p, p, p, p, p
+5: k, kfb, k, k, yo, ssk, k2tog, yo, k, yo, sk2p, yo, k, yo, ssk, k2tog, k
+6: p, kfb, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p
+7: k, kfb, k, k, yo, ssk, k, k, k, k, k2tog, yo, k, yo, ssk, k, k2tog, k
+8: p, kfb, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p
+9: k, kfb, k2tog, yo, k, k, k, yo, ssk, k, k, k2tog, yo, k, k, k, k, k2tog, k
+10: p, kfb, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p
+11: k, kfb, k, k2tog, yo, k, yo, sk2p, yo, k, yo, ssk, k2tog, yo, k, yo, sk2p, yo, k2tog, k
+12: p, kfb, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p
+13: k, kfb, k, k, k, k, k, k2tog, yo, k, yo, ssk, k, k, k, k, k2tog, yo, k, k2tog, k
+14: p, kfb, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p
+15: k, kfb, k, k, yo, ssk, k, k, k2tog, yo, k, k, k, yo, ssk, k, k, k2tog, yo, k, k2tog, k
+16: p, kfb, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p
+17: k, kfb, k, yo, sk2p, yo, k, yo, ssk, k2tog, yo, k, yo, sk2p, yo, k, yo, ssk, k2tog, yo, k, k2tog, k
+18: p, kfb, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p, p

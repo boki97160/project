@@ -4,6 +4,7 @@ import numpy as np
 import mahotas
 import cv2
 import imutils
+f=open("./src/nurmilintu_written.txt","r")
 #f=open("./src/wintermute_written.txt","w+")
 m = 10000
 scale = 30
@@ -120,7 +121,7 @@ infor = infor[::-1]
 row=1
 pattern=[]
 for i in range(len(infor)):
-    #written = f.readline()[:-1]
+    written = f.readline()[:-1]
     list=[]
     cmp=""
     for j in range(len(infor[i])):
@@ -131,9 +132,11 @@ for i in range(len(infor)):
     cmp+=str(row)+": "
     for l in range(len(list)):
         if(list[l]!=''):
-            cmp+=list[l]+", "
+            cmp+=list[l]
+            if(l!=len(list)-1):
+                cmp+=", "
     print(cmp)
     row+=1
-    #print(cmp == written)
+    print(cmp == written)
     #f.write(cmp+"\n")
-#f.close()
+f.close()
