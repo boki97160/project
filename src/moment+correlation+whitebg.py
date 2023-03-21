@@ -6,7 +6,6 @@ from scipy.spatial.distance import correlation, cdist,cosine,euclidean
 import math
 import heapq
 
-count = 0
 project_name = "oceanbound"
 #f=open("./src/"+project_name+"_written.txt","w+")
 f=open("./src/"+project_name+"_written.txt","r")
@@ -75,8 +74,6 @@ def cos(key,grid):
     sum=0
     for i in range(grid.shape[0]):
         sum+=1-cosine(grid[i],key[i])
-    tk = np.transpose(key)
-    tg = np.transpose(grid)
     for i in range(grid.shape[0]):
         sum+=1-cosine(grid[i],key[i])
     return sum
@@ -84,8 +81,6 @@ def cos(key,grid):
 def compare_grid(grid):
     if grid.shape[0]<0.8*size or grid.shape[1]<0.8*size:
         return ""
-    global count
-    count+=1
     if(check_blank(grid)):
         return "k"
     width = round(grid.shape[1]/grid.shape[0])
@@ -175,5 +170,4 @@ for i in range(len(infor)):
                 print(ws[w]+" / "+list[w])
         print(res == written)
         #f.write(res+"\n")   
-print(count)
 f.close()

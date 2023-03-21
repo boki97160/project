@@ -18,5 +18,5 @@ class Start(QtWidgets.QWidget):
         if os.path.exists(text):
             print("exist")
         else:
-            os.makedirs(text)
-            os.system('python choose.py')
+            os.makedirs('.//program/data/'+text)
+            os.system('python .//program//choose.py')
