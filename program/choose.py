@@ -8,7 +8,7 @@ from pdf2image import convert_from_path
 
 app = QtWidgets.QApplication(sys.argv)
 window = QtWidgets.QMainWindow()
-window.resize(420,594)
+
 form = QtWidgets.QWidget()
 label = QtWidgets.QLabel(window)
 layout =QtWidgets.QVBoxLayout(form)
@@ -16,6 +16,8 @@ layout =QtWidgets.QVBoxLayout(form)
 init_pos = [-1,-1]
 drawing=False
 scr_count = 0
+
+
 
 class Choose: 
     now_page=1
@@ -26,6 +28,7 @@ class Choose:
         btn = QtWidgets.QPushButton(form)
         btn.setText("Select Pattern")
         btn.clicked.connect(self.getPath)
+        form.resize(420,700)
         form.show()
         sys.exit(app.exec_())
     def getPath(self):
@@ -35,10 +38,10 @@ class Choose:
         #print(file_path)
         self.convert()
     def convert(self):
+        #轉換圖片
         images = convert_from_path(self.file_path,300,poppler_path=r'C:\Program Files\poppler-0.67.0\bin') #DPI
         for i, image in enumerate(images):
             fname = 'test_image'+str(i+1)+'.png' #path
-            self.total_page+=1
             image.save(fname, "PNG")
         self.choose()
     def choose(self):
@@ -80,8 +83,8 @@ class Choose:
         form.resize(420,700)
     def select(self):
         global img, original, scr_count
-        original = cv2.imread('test_image'+str(self.now_page)+'.png')
-        img = cv2.resize(original,(210*2,297*2))
+        img = cv2.imread('test_image'+str(self.now_page)+'.png')
+        #img = cv2.resize(original,(210*2,297*2))
         cv2.namedWindow('image',0)
         cv2.resizeWindow('image',420,594)
         cv2.setMouseCallback('image',self.draw)
@@ -95,7 +98,7 @@ class Choose:
         elif event == cv2.EVENT_MOUSEMOVE:
             if drawing == True:
                 img2 = img.copy() 
-                cv2.rectangle(img2, (init_pos[0],init_pos[1]),(x,y), (0,0,255), 2)
+                cv2.rectangle(img2, (init_pos[0],init_pos[1]),(x,y), (0,0,255), 10)
                 cv2.imshow('image',img2)
         elif event == cv2.EVENT_LBUTTONUP:
             drawing = False
@@ -107,7 +110,7 @@ class Choose:
     def check_total_page(self):
         page = 1
         while True:
-            if os.path.exists('.\\test_image'+str(page)+'.png'):
+            if os.path.exists('.\source\\test_image'+str(page)+'.png'):
                 self.total_page=page
                 page+=1
             else:

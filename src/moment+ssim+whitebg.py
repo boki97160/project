@@ -6,6 +6,7 @@ from scipy.spatial.distance import directed_hausdorff
 import math
 import heapq
 
+first = True
 project_name = "oceanbound"
 #f=open("./src/"+project_name+"_written.txt","w+")
 f=open("./src/"+project_name+"_written.txt","r")
@@ -58,6 +59,12 @@ def check_blank(grid):
 def cmpsim(grid,width):
     sim =[]
     grid = cv2.resize(grid,(size*width,size))
+    """"""
+    global first
+    if first == True:
+        np.savetxt('test.txt',grid,fmt="%d")
+        first = False
+    """"""
     fg = zernike(addbg(grid,width))
     for key in keys[width]:
         fk = key['moments']
