@@ -2,7 +2,7 @@ from sewar.full_ref import ssim
 import numpy as np
 import mahotas
 import cv2
-from scipy.spatial.distance import directed_hausdorff
+from scipy.spatial.distance import cosine
 import math
 import heapq
 
@@ -55,19 +55,33 @@ def check_blank(grid):
                 c+=1
     return( c>grid.shape[0]*grid.shape[1]*0.95)
 
-def cmpsim(grid,width):
-    sim =[]
-    grid = cv2.resize(grid,(size*width,size))
-    fg = zernike(addbg(grid,width))
-    for key in keys[width]:
-        fk = key['moments']
-        sim.append({'abbr':key['abbr'],'dist':np.linalg.norm(fk - fg),'ssim':ssim(key['symbol'],grid)})
-    #sim.sort(key = lambda x : x[1])
-    smallest = heapq.nsmallest(4,sim,key=lambda x:x['dist'])
-    #smallest.sort(key = lambda x : x['ssim'], reverse=True)
-    smallest.sort(key = lambda x : x['ssim'], reverse = True)
-    return smallest[0]['abbr']
+def cos(key,grid):
+    sum=0
+    for i in range(grid.shape[0]):
+        sum+=1-cosine(grid[i],key[i])
+    tk = np.transpose(key)
+    tg = np.transpose(grid)
+    for i in range(grid.shape[0]):
+        sum+=1-cosine(grid[i],key[i])
+    return sum
 
+def cmpsim(grid,width):
+    grid = cv2.resize(grid,(size*width,size))
+    if len(key_list)==0:
+        key_list.append((grid,width))
+        print( str(len(key_list)))
+    else:
+        sim = []
+        for k in key_list:
+            sim.append(cos(grid,k[0]))
+        if np.max(sim)<0.7:
+            print(np.max(sim))
+            key_list.append((grid,width))
+            print('len'+str(len(key_list)))
+            cv2.imwrite(str(len(key_list))+'.png',grid)
+        else:
+            print (str(np.argmax(sim)))
+    return "-"
 def compare_grid(grid):
     if grid.shape[0]<0.8*size or grid.shape[1]<0.8*size:
         return ""
@@ -78,7 +92,7 @@ def compare_grid(grid):
     return cmpsim(grid,width)
 
 def zernike(img):
-    thresh = cv2.threshold(255-img, 50, 255, cv2.THRESH_BINARY)[1]
+ """   thresh = cv2.threshold(255-img, 50, 255, cv2.THRESH_BINARY)[1]
     contours = cv2.findContours(thresh, 1, 2)[0]
     minx,miny = img.shape[0],img.shape[1]
     maxx,maxy = 0,0
@@ -93,14 +107,14 @@ def zernike(img):
     center = (round(x+w/2),round(y+h/2))
     rect = img[center[1]-radius:center[1]+radius,center[0]-radius:center[0]+radius]
     features = mahotas.features.zernike_moments(rect,radius,degree=8)
-    return features
+    return features"""
 
-original = cv2.imread('./src/'+project_name+'_key.png',0)
+"""original = cv2.imread('./src/'+project_name+'_key.png',0)
 key = find_stats(original,scale)
 
 for x,y,w,h,area in key:
     block = original[y:y+h,x:x+w]
-    key_list.append(block)
+    key_list.append(block)"""
     
 
 original = cv2.imread('./src/'+project_name+'_chart.png',0)
@@ -114,7 +128,7 @@ infor=[]
 
 size=round(np.mean(grid[:,3]))
 
-for k in range(len(key_list)):
+"""for k in range(len(key_list)):
     key = key_list[k]
     width = round(key.shape[1]/key.shape[0])
     if width>10:
@@ -124,7 +138,7 @@ for k in range(len(key_list)):
     else:
         
         keys[width].append({'abbr':key_content[k],'symbol':cv2.resize(key,(size*width,size)),'moments':zernike(addbg(key,width))})
-
+"""
 for now in grid:
     x,y,w,h,area = now
     if(abs(y-last_y)>dist):
@@ -155,10 +169,6 @@ for i in range(len(infor)):
         res = str(row)+": "+', '.join(list)
         print(res)
         row+=1
-        ws = written[3:].split(', ')
-        for w in range(len(ws)):
-            if ws[w]!=list[w]:
-                print(ws[w]+" / "+list[w])
         print(res == written)
         #f.write(res+"\n")   
 f.close()

@@ -6,7 +6,8 @@ from scipy.spatial.distance import correlation, cdist,cosine,euclidean
 import math
 import heapq
 
-project_name = "secretkeeper"
+count = 0
+project_name = "oceanbound"
 #f=open("./src/"+project_name+"_written.txt","w+")
 f=open("./src/"+project_name+"_written.txt","r")
 size = 1000
@@ -15,11 +16,11 @@ key_list=[]
 key_zernike=[]
 keys=[[] for i in range(10)]
 #secretkeeper
-key_content=["k","p","yo","kfb","k2tog","ssk","cdd","k","k"] 
+#key_content=["k","p","yo","kfb","k2tog","ssk","cdd","k","k"] 
 #wintermute
 #key_content= ["T4F","ssk","T3B","C4B","k","yo","T3F","p","CDD","T4B","k1tbl","CO/BO"]
 #oceanbound
-#key_content=["k","yo","k2tog","kfbf","cdd","k","k"]
+key_content=["k","yo","k2tog","kfbf","cdd","k","k"]
 #nurmilintu
 #key_content = ["","k","k","k","p","k","kfb","k","yo","k","k2tog","k","ssk","k","sk2p","k"]
 
@@ -63,7 +64,7 @@ def cmpsim(grid,width):
     for key in keys[width]:
         fk = key['moments']
         sim.append({'abbr':key['abbr'],'dist':np.linalg.norm(fk - fg),'cos':cos(key['symbol'],grid)})
-    smallest = heapq.nsmallest(4,sim,key=lambda x:x['dist'])
+    smallest = heapq.nsmallest(2,sim,key=lambda x:x['dist'])
     smallest.sort(key = lambda x:x['cos'],reverse=True)
     #print([g['abbr'] for g in smallest])
     #print([g['cos'] for g in smallest])
@@ -83,7 +84,8 @@ def cos(key,grid):
 def compare_grid(grid):
     if grid.shape[0]<0.8*size or grid.shape[1]<0.8*size:
         return ""
-    
+    global count
+    count+=1
     if(check_blank(grid)):
         return "k"
     width = round(grid.shape[1]/grid.shape[0])
@@ -173,4 +175,5 @@ for i in range(len(infor)):
                 print(ws[w]+" / "+list[w])
         print(res == written)
         #f.write(res+"\n")   
+print(count)
 f.close()

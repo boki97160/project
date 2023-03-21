@@ -40,7 +40,7 @@ class Choose:
         #轉換圖片
         images = convert_from_path(self.file_path,300,poppler_path=r'C:\Program Files\poppler-0.67.0\bin') #DPI
         for i, image in enumerate(images):
-            fname = '.\source\\test_image'+str(i+1)+'.png' #path
+            fname = 'test_image'+str(i+1)+'.png' #path
             image.save(fname, "PNG")
         self.choose()
     def choose(self):
@@ -71,7 +71,7 @@ class Choose:
             self.now_page-=1
             self.display()
     def display(self):
-        original = cv2.imread('.\source\\test_image'+str(self.now_page)+'.png')
+        original = cv2.imread('test_image'+str(self.now_page)+'.png')
         img = cv2.resize(original,(210*2,297*2))
         height,width,channel = img.shape
         bytesperline = channel * width
@@ -82,7 +82,7 @@ class Choose:
         form.resize(420,700)
     def select(self):
         global img, original, scr_count
-        img = cv2.imread('.\source\\test_image'+str(self.now_page)+'.png')
+        img = cv2.imread('test_image'+str(self.now_page)+'.png')
         #img = cv2.resize(original,(210*2,297*2))
         cv2.namedWindow('image',0)
         cv2.resizeWindow('image',420,594)
