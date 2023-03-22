@@ -3,7 +3,7 @@ import cv2
 from PyQt5 import QtWidgets
 from PyQt5.QtGui import *
 import numpy as np
-from sewar.full_ref import ssim
+from sewar.full_ref import ssim 
 
 pattern_name = "nurmilintu"
 scale = 30
@@ -19,6 +19,8 @@ def find_stats(original, scale):
     table = cv2.bitwise_or(result1,result2)
     stats= cv2.connectedComponentsWithStats(~table,connectivity=4,ltype=cv2.CV_32S)[2][2:]
     return stats
+
+
 
 def isBlank(grid):
     return np.count_nonzero(grid >=250)>grid.shape[0]*grid.shape[1]*0.95

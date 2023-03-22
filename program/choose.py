@@ -5,6 +5,8 @@ import os
 from PyQt5 import QtWidgets
 from PyQt5.QtGui import *
 from pdf2image import convert_from_path
+from skimage.measure import label as tag
+import numpy as np
 
 app = QtWidgets.QApplication(sys.argv)
 window = QtWidgets.QMainWindow()
@@ -39,10 +41,10 @@ class Choose:
         self.convert()
     def convert(self):
         #轉換圖片
-        images = convert_from_path(self.file_path,300,poppler_path=r'C:\Program Files\poppler-0.67.0\bin') #DPI
+        """images = convert_from_path(self.file_path,300,poppler_path=r'C:\Program Files\poppler-0.67.0\bin') #DPI
         for i, image in enumerate(images):
             fname = 'test_image'+str(i+1)+'.png' #path
-            image.save(fname, "PNG")
+            image.save(fname, "PNG")"""
         self.choose()
     def choose(self):
         self.check_total_page()
@@ -106,15 +108,40 @@ class Choose:
             #times = original.shape[0]/(297*2)
             #cv2.imwrite('.\source\screenshot\\'+str(scr_count)+'.png',original[int(init_pos[1]*times):int(y*times),int(init_pos[0]*times):int(x*times)])
             #cv2.imwrite('.\source\screenshot\\'+str(scr_count)+'.png',img[init_pos[1]:y,init_pos[0]:x])
-            cv2.imwrite(str(scr_count)+'.png',img[init_pos[1]:y,init_pos[0]:x])
+            self.screenshot = img[init_pos[1]:y,init_pos[0]:x]
+            cv2.imwrite(str(scr_count)+'.png',self.screenshot)
+            self.crop()
+            
     def check_total_page(self):
         page = 1
         while True:
-            if os.path.exists('.\source\\test_image'+str(page)+'.png'):
+            if os.path.exists('test_image'+str(page)+'.png'):
                 self.total_page=page
                 page+=1
             else:
                 return
-
+    def crop(self):
+        original = cv2.imread('1.png')
+        img = cv2.cvtColor(original,cv2.COLOR_BGR2GRAY)
+        img =  cv2.threshold(img,250,255,cv2.THRESH_BINARY_INV)[1]
+        labeled,num=tag(img,background=0,return_num=True)
+        max_label=0
+        max_num=0
+        for i in range(1,num+1):
+            sub_num = np.sum(labeled==i)
+            if sub_num>max_num:
+                max_num=sub_num
+                max_label=i
+        if max_label>0:
+            img[labeled!=max_label]=0
+        print("cropb")
+        cv2.imwrite('./program/img.png',img)
+        gray = img
+        gray = 255*(gray < 128).astype(np.uint8)
+        coords = cv2.findNonZero(~gray)
+        x, y, w, h = cv2.boundingRect(coords)
+        rect = original[y:y+h,x:x+w]
+        cv2.imwrite("./program/cropped.png",rect)
+        return
 if __name__ == '__main__':
     Choose()
