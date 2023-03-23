@@ -39,7 +39,7 @@ class Choose:
         self.file_path = tkinter.filedialog.askopenfilename(parent=window,title='Select File', filetypes=(("application/pdf","*.pdf"),("all files","*.*")))
         #print(file_path)
         self.convert()
-    def convert(self):
+    def convert(self):  
         #轉換圖片
         """images = convert_from_path(self.file_path,300,poppler_path=r'C:\Program Files\poppler-0.67.0\bin') #DPI
         for i, image in enumerate(images):
