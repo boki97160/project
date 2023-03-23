@@ -25,7 +25,6 @@ class Choose:
     now_page=1
     #改total_page
     total_page=0
-    file_path = ""
     def __init__(self):     
         btn = QtWidgets.QPushButton(form)
         btn.setText("Select Pattern")
@@ -37,14 +36,13 @@ class Choose:
         window = tkinter.Tk()
         window.withdraw()     
         self.file_path = tkinter.filedialog.askopenfilename(parent=window,title='Select File', filetypes=(("application/pdf","*.pdf"),("all files","*.*")))
-        #print(file_path)
         self.convert()
     def convert(self):  
         #轉換圖片
-        """images = convert_from_path(self.file_path,300,poppler_path=r'C:\Program Files\poppler-0.67.0\bin') #DPI
+        images = convert_from_path(self.file_path,300,poppler_path=r'C:\Program Files\poppler-0.67.0\bin') #DPI
         for i, image in enumerate(images):
             fname = 'test_image'+str(i+1)+'.png' #path
-            image.save(fname, "PNG")"""
+            image.save(fname, "PNG")
         self.choose()
     def choose(self):
         self.check_total_page()
