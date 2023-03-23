@@ -1,7 +1,0 @@
-
-QLabel{
-    font-family: courier-new, menlo, monospace, arial;
-    font-size: 36px;
-    text-align: center;
-    border: 1px solid #000000;
-}
