@@ -8,6 +8,13 @@ from sewar.full_ref import ssim
 pattern_name = "nurmilintu"
 scale = 30
 
+#secretkeeper
+#key_content=["k","p","yo","kfb","k2tog","ssk","cdd","k","k"] 
+#wintermute
+#key_content= ["T4F","ssk","T3B","C4B","k","yo","T3F","p","CDD","T4B","k1tbl","CO/BO"]
+#oceanbound
+#key_content=["k","yo","k2tog","kfbf","cdd","k","k"]
+#nurmilintu
 key_content = ["","k","k","k","p","k","kfb","k","yo","k","k2tog","k","ssk","k","sk2p","k"]
 
 def find_stats(original, scale):
