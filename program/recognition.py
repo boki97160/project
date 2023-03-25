@@ -4,19 +4,25 @@ from PyQt5 import QtWidgets
 from PyQt5.QtGui import *
 import numpy as np
 from sewar.full_ref import ssim 
+from scipy.spatial.distance import *
+import heapq
+import math
 
-pattern_name = "nurmilintu"
+
 scale = 30
 
-#secretkeeper
+#pattern_name = "secretkeeper"
 #key_content=["k","p","yo","kfb","k2tog","ssk","cdd","k","k"] 
-#wintermute
-#key_content= ["T4F","ssk","T3B","C4B","k","yo","T3F","p","CDD","T4B","k1tbl","CO/BO"]
-#oceanbound
-#key_content=["k","yo","k2tog","kfbf","cdd","k","k"]
-#nurmilintu
-key_content = ["","k","k","k","p","k","kfb","k","yo","k","k2tog","k","ssk","k","sk2p","k"]
 
+#pattern_name = "wintermute"
+#key_content= ["T4F","ssk","T3B","C4B","k","yo","T3F","p","CDD","T4B","k1tbl","CO/BO"]
+#T4B->C4B, CDD->yo
+
+pattern_name = "oceanbound"
+key_content=["k","yo","k2tog","kfbf","cdd","k","k"]
+
+#pattern_name = "nurmilintu"
+#key_content = ["k","k","k","k","p","k","kfb","k","yo","k","k2tog","k","ssk","k","sk2p","k"]
 def find_stats(original, scale):
     src= cv2.threshold(original,250,255,cv2.THRESH_BINARY_INV)[1]
     kernel = cv2.getStructuringElement(cv2.MORPH_CROSS,(scale,1))
@@ -80,7 +86,6 @@ class Transfer:
         for i in range(len(self.key_list)):
             for j in range(len(self.key_list[i])):
                 self.key_list[i][j].symbol = cv2.resize(self.key_list[i][j].symbol,(self.size*self.key_list[i][j].width,self.size))
-        print(self.key_list)
         f=open("./src/"+pattern_name+"_written.txt","r")
         row=1
         for i in range(len(self.pattern)):
@@ -111,16 +116,35 @@ class Transfer:
             return "k"
         width = round(grid.shape[1]/grid.shape[0])
         return self.key_list[width][self.cmpsim(grid,width)].abbr
-    #TODO: need to change into cosine distance
+    
     def cmpsim(self,grid,width):
         grid = cv2.resize(grid,(self.size*width,self.size))
-        sim = []
-        for i in range(len(self.key_list[width])):
-            sim.append(ssim(grid,self.key_list[width][i].symbol)[1])
+        key = [self.key_list[width][i].symbol for i in range(len(self.key_list[width]))]
+        gmean = np.mean(grid)
+        diff =[abs(gmean-np.mean(key[i])) for i in range(len(key))]
+        sim=[0 for i in range(len(key))]
+        for i in range(len(key)):
+            if (not isBlank(key[i])) and key_content[i]!='k' and diff[i]<10:
+                sim[i]= self.cos(key[i],grid)
         return np.argmax(sim)
-
-
+    
+    def cos(self,key,grid):
+        """dist = []
+        one = [1 for i in range(grid.shape[0])]
+        for i in range(grid.shape[0]):
+            dist.append(1-cosine(grid[i],key[i]))
+        sim_hor = 1-cosine(one,dist)
+        #return sim_hor"""
+        transpose_grid = grid.transpose()
+        transpose_key = key.transpose()
+        dist = []
+        one = [1 for i in range(grid.shape[1])]
+        for i in range(grid.shape[1]):
+            dist.append(1-cosine(transpose_grid[i],transpose_key[i]))
+        sim_ver = 1-cosine(one,dist)
+        return sim_ver
+        return sim_hor+sim_ver
+        #print(sim_hor,sim_ver)
+        #return (sim_hor+sim_ver)/2
 Transfer()
-#####
-
 
