@@ -8,7 +8,6 @@ from scipy.spatial.distance import *
 import heapq
 import math
 
-
 scale = 30
 
 #pattern_name = "secretkeeper"
@@ -49,13 +48,21 @@ class Transfer:
     pattern = [] 
     key_list = [[] for i in range(20)]
     def __init__(self):
-        self.read_keys()
-        self.read_chart()
+        pass
+    def process(self,rect):
+        if not self.read_keys():
+            print("keys error")
+            return
+        elif not self.read_chart(rect):
+            print("chart error")
+            return
         self.split()
         self.traversal()
     def read_keys(self):
         original_keys = cv2.imread('./src/'+pattern_name+'_key.png',cv2.IMREAD_GRAYSCALE)
         keys = find_stats(original_keys,scale)
+        if len(keys) == 0:
+            return False
         key_count = 0
         for x,y,w,h,area in keys: 
             width = round(w/h)
@@ -63,10 +70,16 @@ class Transfer:
                 key = Key(key_content[key_count],original_keys[y:y+h,x:x+w],width)
                 self.key_list[width].append(key)
                 key_count+=1
-    def read_chart(self):
-        self.original_pattern = cv2.imread('./src/'+pattern_name+'_chart.png',cv2.IMREAD_GRAYSCALE)
-        self.grid = find_stats(self.original_pattern,scale)
+        return True
+        
+    def read_chart(self,rect):
+        #self.original = cv2.imread('./src/'+pattern_name+'_chart.png',cv2.IMREAD_GRAYSCALE)
+        self.original = rect
+        self.grid = find_stats(self.original,scale)
+        if len(self.grid) == 0:
+            return False
         self.size = round(np.mean(self.grid[:,3]))
+        return True
     def split(self):
         tmp_list = []
         dist = 12
@@ -93,7 +106,7 @@ class Transfer:
             res=""
             for j in range(len(self.pattern[i])):
                 x,y,w,h,area = self.pattern[i][j]
-                g=self.original_pattern[y:y+h,x:x+w]         
+                g=self.original[y:y+h,x:x+w]         
                 content = self.compare_grid(g)
                 if content!="":
                     tmp_list.append(content) 
@@ -146,5 +159,5 @@ class Transfer:
         return sim_hor+sim_ver
         #print(sim_hor,sim_ver)
         #return (sim_hor+sim_ver)/2
-Transfer()
-
+    def setWS(self,flag):
+        self.WS = flag

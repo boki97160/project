@@ -6,8 +6,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 import numpy as np
-import math
-   
+
 path ='./program/wintermute_cropped.png'
 written = []
 with open("./src/wintermute_written.txt", "r") as f:
@@ -15,13 +14,13 @@ with open("./src/wintermute_written.txt", "r") as f:
         written.append(line.strip())
 
 class Reader():
-    def __init__(self,WS):     
+    def __init__(self):     
         QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
         QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
-        self.WS = WS
+        
         self.app = QApplication(sys.argv)
-        self.initUI()
-    
+    """def setWS(self, flag):
+        self.WS = flag"""
     def calcRowHeight(self,w,h):
         img = cv2.imread(path,0)
         img = cv2.resize(img,(w,h))

@@ -2,126 +2,138 @@ import tkinter, tkinter.filedialog
 import sys
 import cv2
 import os
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtGui, QtCore
 from PyQt5.QtGui import *
 from pdf2image import convert_from_path
 from skimage.measure import label as tag
 import numpy as np
+import recognition
 
-app = QtWidgets.QApplication(sys.argv)
-window = QtWidgets.QMainWindow()
+class Choose:
+    def __init__(self): 
+        self.app = QtWidgets.QApplication(sys.argv)
 
-form = QtWidgets.QWidget()
-label = QtWidgets.QLabel(window)
-layout =QtWidgets.QVBoxLayout(form)
+        self.form = QtWidgets.QWidget()
+        self.form.resize(420,700)
 
-init_pos = [-1,-1]
-drawing=False
-scr_count = 0
+        self.btn = QtWidgets.QPushButton(self.form)
+        self.btn.setText("Select Pattern")
+        self.btn.clicked.connect(self.getPath)
 
+        self.now_page=1
+        self.total_page=1
+        self.scr_count = 0
+    
+        self.init_pos = [-1,-1]
+        self.drawing=False
 
+        self.form.show()
+        self.rec = recognition.Transfer()
+        sys.exit(self.app.exec_())
 
-class Choose: 
-    now_page=1
-    #改total_page
-    total_page=0
-    def __init__(self):     
-        btn = QtWidgets.QPushButton(form)
-        btn.setText("Select Pattern")
-        btn.clicked.connect(self.getPath)
-        form.resize(420,700)
-        form.show()
-        sys.exit(app.exec_())
     def getPath(self):
         window = tkinter.Tk()
         window.withdraw()     
         self.file_path = tkinter.filedialog.askopenfilename(parent=window,title='Select File', filetypes=(("application/pdf","*.pdf"),("all files","*.*")))
         self.convert()
-    def convert(self):  
-        #轉換圖片
-        images = convert_from_path(self.file_path,300,poppler_path=r'C:\Program Files\poppler-0.67.0\bin') #DPI
+
+    def convert(self):
+        #convert image
+        """images = convert_from_path(self.file_path,300,poppler_path=r'C:\Program Files\poppler-0.67.0\bin') #DPI
         for i, image in enumerate(images):
             fname = 'test_image'+str(i+1)+'.png' #path
-            image.save(fname, "PNG")
+            image.save(fname, "PNG")"""
         self.choose()
+
     def choose(self):
         self.check_total_page()
-        form.resize(420,700)
-        btnup = QtWidgets.QPushButton(form)
-        btnup.setText(">")
-        btnup.clicked.connect(self.page_down)
-        btnup.move(200,0)
-        btnup.show()
-        btndn = QtWidgets.QPushButton(form)
-        btndn.setText("<")
-        btndn.clicked.connect(self.page_up)
-        btndn.move(100,0)
-        btndn.show()
-        btncon = QtWidgets.QPushButton(form)
-        btncon.setText("Confirm")
-        btncon.clicked.connect(self.select)
-        btncon.move(300,0)
-        btncon.show()
+        self.pixmap = QtGui.QPixmap('test_image'+str(self.now_page)+'.png').scaled(420,594)
+        
+        self.label = QtWidgets.QLabel(self.form)
+        self.label.setGeometry(0,50,420,600)
+
+        imagePath = ['./program/left.png','./program/right.png','./program/rotate.png','']
+        self.btns = [ QtWidgets.QPushButton(self.form) for i in range(4)]
+        for i in range(4):
+            self.btns[i].setGeometry(100*i,0,100,50)
+            self.btns[i].setIcon(QIcon(imagePath[i]))
+            self.btns[i].show()
+        self.btns[3].setText("Select")
+        self.btns[0].clicked.connect(self.page_up)
+        self.btns[1].clicked.connect(self.page_down)
+        self.btns[2].clicked.connect(self.rotate)
+        self.btns[3].clicked.connect(self.select)
+        self.wsCheckbox = QtWidgets.QCheckBox(self.form)
+        self.wsCheckbox.setGeometry(10,650,25,25)
+        self.wsCheckbox.show()
+        self.wsCheckbox.clicked.connect(self.changeState)
+        self.WS = False
+        self.wsTextLabel = QtWidgets.QLabel(self.form)
+        self.wsTextLabel.setText("There are WS rows in pattern.")
+        self.wsTextLabel.setGeometry(45,650,500,25)
+        self.wsTextLabel.show()
         self.display()
+    def changeState(self):
+        self.WS = not self.WS
+        self.rec.setWS(self.WS)
     def page_down(self):
         if(self.now_page < self.total_page):
             self.now_page+=1
+            self.pixmap = QtGui.QPixmap('test_image'+str(self.now_page)+'.png').scaled(420,594)
             self.display()
     def page_up(self):
         if(self.now_page>1):
             self.now_page-=1
+            self.pixmap = QtGui.QPixmap('test_image'+str(self.now_page)+'.png').scaled(420,594)
             self.display()
-    def display(self):
-        original = cv2.imread('test_image'+str(self.now_page)+'.png')
-        img = cv2.resize(original,(210*2,297*2))
-        height,width,channel = img.shape
-        bytesperline = channel * width
-        qimg = QImage(img, width,height,bytesperline,QImage.Format_RGB888).rgbSwapped()
-        pixmap = QPixmap(420,594).fromImage(qimg)
-        label.setPixmap(pixmap)
-        layout.addWidget(label)
-        form.resize(420,700)
+
+    def rotate(self):
+        transform = QtGui.QTransform().rotate(90)
+        self.pixmap = self.pixmap.transformed(transform, QtCore.Qt.SmoothTransformation)
+        if (self.label.height()==600):
+            self.label.setGeometry(0,50,594,420)
+            self.form.resize(594,600)
+        else:
+            self.label.setGeometry(0,50,420,600)
+            self.form.resize(420,700)
+        self.display()
+
     def select(self):
-        global img, original, scr_count
-        img = cv2.imread('test_image'+str(self.now_page)+'.png')
-        #img = cv2.resize(original,(210*2,297*2))
+        self.img = cv2.imread('test_image'+str(self.now_page)+'.png')
         cv2.namedWindow('image',0)
         cv2.resizeWindow('image',420,594)
         cv2.setMouseCallback('image',self.draw)
-        cv2.imshow('image',img)
-        scr_count+=1
+        cv2.imshow('image',self.img)
+        self.scr_count+=1
+
+    def display(self):
+        self.label.setPixmap(self.pixmap)
+        self.label.show()
+        self.form.show()
+
     def draw(self,event,x,y,flags,param):
-        global init_pos, drawing, scr_count
         if event == cv2.EVENT_LBUTTONDOWN:
-            drawing=True
-            init_pos = [x,y]
+            self.drawing=True
+            self.init_pos = [x,y]
         elif event == cv2.EVENT_MOUSEMOVE:
-            if drawing == True:
-                img2 = img.copy() 
-                cv2.rectangle(img2, (init_pos[0],init_pos[1]),(x,y), (0,0,255), 10)
+            if self.drawing == True:
+                img2 = self.img.copy() 
+                cv2.rectangle(img2, (self.init_pos[0],self.init_pos[1]),(x,y), (0,0,255), 10)
                 cv2.imshow('image',img2)
         elif event == cv2.EVENT_LBUTTONUP:
-            drawing = False
-            print(scr_count,init_pos,x,y)
-            #times = original.shape[0]/(297*2)
-            #cv2.imwrite('.\source\screenshot\\'+str(scr_count)+'.png',original[int(init_pos[1]*times):int(y*times),int(init_pos[0]*times):int(x*times)])
-            #cv2.imwrite('.\source\screenshot\\'+str(scr_count)+'.png',img[init_pos[1]:y,init_pos[0]:x])
-            self.screenshot = img[init_pos[1]:y,init_pos[0]:x]
-            cv2.imwrite(str(scr_count)+'.png',self.screenshot)
-            self.crop()
+            self.drawing = False
+            self.screenshot = self.img[self.init_pos[1]:y,self.init_pos[0]:x]
+            #cv2.imwrite(str(self.scr_count)+'.png',self.screenshot)
+            self.crop(self.screenshot)
             
     def check_total_page(self):
-        page = 1
-        while True:
-            if os.path.exists('test_image'+str(page)+'.png'):
-                self.total_page=page
-                page+=1
-            else:
-                return
-    def crop(self):
-        original = cv2.imread('1.png')
-        img = cv2.cvtColor(original,cv2.COLOR_BGR2GRAY)
-        img =  cv2.threshold(img,250,255,cv2.THRESH_BINARY_INV)[1]
+        while os.path.exists('test_image'+str(self.total_page)+'.png'):
+            self.total_page+=1
+        return
+            
+    def crop(self,screenshot):
+        self.img = cv2.cvtColor(screenshot,cv2.COLOR_BGR2GRAY)
+        img =  cv2.threshold(self.img,250,255,cv2.THRESH_BINARY_INV)[1]
         labeled,num=tag(img,background=0,return_num=True)
         max_label=0
         max_num=0
@@ -132,14 +144,13 @@ class Choose:
                 max_label=i
         if max_label>0:
             img[labeled!=max_label]=0
-        print("cropb")
-        cv2.imwrite('./program/img.png',img)
-        gray = img
-        gray = 255*(gray < 128).astype(np.uint8)
+        gray = 255*(img < 128).astype(np.uint8)
         coords = cv2.findNonZero(~gray)
         x, y, w, h = cv2.boundingRect(coords)
-        rect = original[y:y+h,x:x+w]
-        cv2.imwrite("./program/cropped.png",rect)
+        rect = self.img[y:y+h,x:x+w]
+        cv2.imwrite('rect.png',rect)
+        print(y,y+h,x,x+w)
+        self.rec.process(rect)
         return
 if __name__ == '__main__':
     Choose()
