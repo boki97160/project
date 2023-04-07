@@ -2,7 +2,6 @@ import sys,os
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
-import cv2
 
 class Start():
     def __init__(self):
@@ -18,9 +17,7 @@ class Start():
         self.next.clicked.connect(self.make)
         self.next.move(100,0)
         self.form.show()
-        
 
-        
         sys.exit(self.app.exec_())
     
     def make(self):
@@ -33,7 +30,6 @@ class Start():
         else:
             self.form.hide()
             #os.makedirs('./data/'+text)
-            #print("OAO")
             os.system("python choose.py")
 
 if __name__ == '__main__':

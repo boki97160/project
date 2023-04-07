@@ -62,8 +62,9 @@ class Choose:
         self.label.setParent(None)
         self.selectPattern()
     def next(self):
-        self.rec.read_chart()
-        self.reader.initUI(self.app)
+        #self.rec.read_chart()
+        self.rec.process(self.app)
+        #self.reader.initUI(self.app)
         self.form.hide()
     def choose(self):
         self.check_total_page()
@@ -154,7 +155,6 @@ class Choose:
             self.drawing = False
             self.screenshot = self.img[self.init_pos[1]:y,self.init_pos[0]:x]
             self.cropped = self.crop(self.screenshot)
-            #
             
     def check_total_page(self):
         while os.path.exists('./test_image'+str(self.total_page)+'.png'):

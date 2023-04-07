@@ -2,9 +2,9 @@ import cv2
 from PyQt5 import QtWidgets
 from PyQt5.QtGui import *
 import numpy as np
-from sewar.full_ref import ssim 
+#from sewar.full_ref import ssim 
 from scipy.spatial.distance import *
-
+import reader
 
 scale = 30
 
@@ -47,13 +47,18 @@ class Transfer:
     size = 0
     pattern = [] 
     key_list = [[] for i in range(20)]
+
     def __init__(self):
-        #self.read_chart()
         pass
-    def process(self):
+    def process(self,app):
+        self.read_chart()
+        self.rec = {}
         self.read_keys()
         self.split()
         self.traversal()
+        self.reader = reader.Reader()
+        self.reader.getdata(self.grid,self.rec)
+        self.reader.initUI(app)
     def read_keys(self):
         original_keys = cv2.imread('../src/'+pattern_name+'_key.png',cv2.IMREAD_GRAYSCALE)
         keys = find_stats(original_keys,scale)
@@ -65,17 +70,16 @@ class Transfer:
             if width < 10: #small unwanted slice
                 key = Key(key_content[key_count],original_keys[y:y+h,x:x+w],width)
                 self.key_list[width].append(key)
+                self.rec[key_content[key_count]] = []
                 key_count+=1
         return True
         
     def read_chart(self):
-        self.original = cv2.imread('./wintermute_cropped.png',cv2.IMREAD_GRAYSCALE)
-        #self.original = cv2.imread('./1.png',cv2.IMREAD_GRAYSCALE)
+        self.original = cv2.imread('./1.png',cv2.IMREAD_GRAYSCALE)
         self.grid = find_stats(self.original,scale)
         if len(self.grid) == 0:
             return False
         self.size = round(np.mean(self.grid[:,3]))
-        self.process()
         return True
     def split(self):
         tmp_list = []
@@ -99,24 +103,27 @@ class Transfer:
         f=open("../src/"+pattern_name+"_written.txt","r")
         row=1
         for i in range(len(self.pattern)):
-            tmp_list=[]
+            
+            tmp_list = []
             res=""
             stitch_inc=0
             for j in range(len(self.pattern[i])):
                 x,y,w,h,area = self.pattern[i][j]
                 g=self.original[y:y+h,x:x+w]         
                 content, stitch = self.compare_grid(g)
+                self.rec[content].append([x,y,x+w,y+h])
                 stitch_inc+=stitch
                 if content!="":
                     tmp_list.append(content) 
-            print(stitch_inc)
+            #print(stitch_inc)
             if len(tmp_list)>0:
                 written = f.readline()[:-1]
                 res = str(row)+": "+', '.join(tmp_list)
+                
                 print(res)
                 row+=1
                 ws = written[3:].split(', ')
-                """for w in range(len(ws)):
+                """for w in range(min(len(ws),len(res))):
                     if ws[w]!=tmp_list[w]:
                         print(ws[w]+" / "+tmp_list[w])"""
                 print(res == written)
@@ -150,6 +157,7 @@ class Transfer:
             dist.append(1-cosine(transpose_grid[i],transpose_key[i]))
         sim_ver = 1-cosine(one,dist)
         return sim_ver
+    
     def setWS(self,flag):
         self.WS = flag
 

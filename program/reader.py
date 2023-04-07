@@ -7,15 +7,22 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 import numpy as np
 
-path ='wintermute_cropped.png'
+path ='./1.png'
 written = []
 with open("../src/wintermute_written.txt", "r") as f:
     for line in f:
         written.append(line.strip())
 
+
+
 class Reader():
-    def __init__(self):     
+    def __init__(self):
+        self.grid_labels={}
+        self.choosen = ''
         self.WS = False
+    def getdata(self,chart,rec):
+        self.chart = chart
+        self.rec = rec
     def setWS(self, flag):
         self.WS = flag
     def calcRowHeight(self):
@@ -31,8 +38,46 @@ class Reader():
         self.rowCount = len(self.rowPos)
         self.hmean = round(self.h/len(self.rowPos))
         return
-    
-    
+    def choose_grid(self,x,y):
+        for abbr in self.rec.keys():
+            for p in self.rec[abbr]:
+                if p[0]<=x and x<=p[2] and p[1]<=y and y <= p[3]:
+                    print(abbr)
+                    if(self.choosen!=''):
+                        self.clear_grid(self.choosen)
+                    self.draw_grid(abbr)
+                    return
+    def draw_grid(self,abbr):
+        if(abbr in self.grid_labels):
+            self.clear_grid()
+            for g in self.grid_labels[abbr]:
+                g.show()
+        else:
+            self.grid_labels[abbr]=[]
+            for grid in self.rec[abbr]:
+                label = QLabel(self.form)
+                x = round(grid[0]*self.patternLabel.width()/self.original[0])+self.patternLabel.x()
+                y = round(grid[1]*self.patternLabel.height()/self.original[1])+self.patternLabel.y()
+                w = round((grid[2]-grid[0])*self.patternLabel.width()/self.original[0])
+                h = round((grid[3]-grid[1])*self.patternLabel.height()/self.original[1])
+                label.setGeometry(x,y,w,h)
+                op = QGraphicsOpacityEffect()
+                op.setOpacity(0.25)
+                label.setGraphicsEffect(op)
+                label_img = QPixmap('./icon/gray.png').scaled(w,h)
+                label.setPixmap(label_img)
+                label.show()
+                self.grid_labels[abbr].append(label)
+        self.display_choice.setText(abbr)
+        self.choosen=abbr
+    def clear_grid(self,abbr):
+        for label in self.grid_labels[abbr]:
+            label.hide()
+        self.grid_labels={}
+        self.display_choice.setText("")
+        self.choosen=''
+        
+    #TODO : pink bar
     def drawBar(self):
         self.bar = QPixmap('./icon/blue_bar.png').scaled(self.w,self.hmean)
         self.pink_bar = QPixmap('./icon/pink_bar.png').scaled(self.w,self.hmean)
@@ -45,7 +90,7 @@ class Reader():
         self.barLabel.setGeometry(10,self.rowPos[self.pos]+10,self.bar.width(),self.rowHeight[self.pos])
         self.pointer = QLabel(self.form)
         self.pointer.setText(str(self.row))
-        self.pointer.setFont(QFont('arial',round(self.hmean/2.5)))
+        self.pointer.setFont(QFont('inconsolata',round(self.hmean/2.5)))
         self.pointer.setGeometry(self.w+20,self.rowPos[self.pos]+10,self.hmean,self.rowHeight[self.pos])
     
     def setBar(self):
@@ -75,7 +120,11 @@ class Reader():
             return
         self.stscount.setText(str(self.stitches+num))
         self.stitches+=num
-
+    def detect(self,event):
+        if event.button() == 1:
+            self.choose_grid(round(event.x()/self.patternLabel.width()*self.original[0]),round(event.y()/self.patternLabel.height()*self.original[1]))
+    def detect_onbar(self,event):
+        self.choose_grid(round((self.barLabel.x()+event.x())/self.patternLabel.width()*self.original[0])-self.patternLabel.x(),round((self.barLabel.y()+event.y())/self.patternLabel.height()*self.original[1])-self.patternLabel.y())
     def initUI(self,app):
         self.app = app
         self.screen = QApplication.desktop()
@@ -84,6 +133,7 @@ class Reader():
         self.ratio = min(self.screen.width()/self.img.width(),self.screen.height()/self.img.height())
         self.h = round(self.img.height()*self.ratio*0.8)
         self.w = round(self.img.width()*self.ratio*0.8)
+        self.original = [self.img.width(),self.img.height()]
         self.img = self.img.scaled(self.w,self.h)
         self.calcRowHeight()
 
@@ -96,6 +146,7 @@ class Reader():
         
         imagePath = ['./icon/cdd.png','','./icon/kfbf.png','./icon/cdd.png','./icon/kfbf.png','./icon/yo.png']
         textSet = ['+','','-','^','v','x']
+        QFontDatabase.addApplicationFont("./font/Inconsolata-VariableFont_wdth,wght.ttf")
         self.buttons = [QPushButton(self.form) for i in range(len(imagePath))]
         for i in range(len(imagePath)):
             pos=i*(self.hmean+10)+25
@@ -110,22 +161,28 @@ class Reader():
         self.buttons[3].clicked.connect(self.incRow)
         self.buttons[4].clicked.connect(self.decRow)
         #self.buttons[5].clicked.connect(QCoreApplication.instance().quit)
-
+        self.buttons[5].clicked.connect(self.clear_grid)
         self.stscount = QLabel(self.form)
         self.stscount.setText(str(self.stitches))
-        self.stscount.setFont(QFont('arial',round(self.hmean/2.5)))
+        self.stscount.setFont(QFont('inconsolata',round(self.hmean/2.5)))
         self.stscount.move(self.w+self.hmean+20,self.buttons[1].y())
         
+        self.display_choice = QLabel(self.form)
+        self.display_choice.setFont(QFont('inconsolata',round(self.hmean/2.5)))
+        self.display_choice.setAlignment(Qt.AlignCenter)
+        self.display_choice.setGeometry(self.w+10,6*(self.hmean+10)+25,100,self.hmean)
         self.patternText = QLabel(self.form)
-        self.patternText.setText(written[0])
-        self.patternText.setFont(QFont('arial',round(self.hmean/3)))
+        self.stscount.setFont(QFont('inconsolata',round(self.hmean/2.5)))
+        self.stscount.move(self.w+self.hmean+20,self.buttons[1].y())
+        self.patternText.setFont(QFont('inconsolata',round(self.hmean/3)))
         self.patternText.setGeometry(10,self.h+10,self.w,self.hmean)
         
         self.drawBar()
         self.form.resize(self.hmean*3+self.w,self.h+75)
         self.form.show()
-        #sys.exit(self.app.exec_())
 
+        self.patternLabel.mousePressEvent = self.detect
+        self.barLabel.mousePressEvent = self.detect_onbar
 if __name__ == '__main__':
     reader = Reader()
     app = QApplication(sys.argv)
