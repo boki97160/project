@@ -17,8 +17,10 @@ class Choose:
         self.screen = QApplication.desktop()
         self.rec = recognition.Transfer()
         self.reader = reader.Reader()
-
         self.form = QWidget()
+        self.init_data()
+        sys.exit(self.app.exec_())
+    def init_data(self):
         self.h = self.screen.height()-300
         self.w = round(self.h*210/297)
         self.form.resize(self.w,self.h+175)
@@ -27,13 +29,13 @@ class Choose:
         self.now_page=1
         self.total_page=1
         self.chart_count = 0
-        self.key_count = 0
         self.init_pos = [-1,-1]
         self.drawing=False
-
+        self.rotated = 0
+        self.changed = False
         self.form.show()
         
-        sys.exit(self.app.exec_())
+        
     def selectPattern(self):
         self.btn = QPushButton(self.form)
         self.btn.setText("Select Pattern")
@@ -55,20 +57,24 @@ class Choose:
         self.choose()
     def back(self):
         self.btn.show()
-        for i in range(6):
+        for i in range(self.btns_num):
             self.btns[i].setParent(None)
         self.wsCheckbox.setParent(None)
         self.wsTextLabel.setParent(None)
         self.label.setParent(None)
+        self.init_data()
         self.selectPattern()
     def next(self):
-        #self.rec.read_chart()
+        #TODO :change to input.py 
         self.rec.process(self.app,self.WS)
-        #self.reader.initUI(self.app)
         self.form.hide()
     def choose(self):
         self.check_total_page()
-        self.pixmap = QPixmap('./test_image'+str(self.now_page)+'.png').scaled(self.w,self.h)
+        self.pixmap = QPixmap('./test_image'+str(self.now_page)+'.png')
+        if self.pixmap.width()>self.pixmap.height():
+            self.w, self.h = self.h, self.w 
+            self.form.resize(self.w,self.h+175)
+        self.pixmap = self.pixmap.scaled(self.w,self.h)
         self.label = QLabel(self.form)
         self.label.setGeometry(0,50,self.w,self.h)
         textSet = ['<','>','⟳','Select Chart','Select Key','< Back','Next >']
@@ -83,7 +89,7 @@ class Choose:
             self.btns[i].setGeometry(round(self.w/(self.btns_num-2)*(i-2)),self.h+100,round(self.w/(self.btns_num-2)),50)
         self.btns[0].clicked.connect(self.page_up)
         self.btns[1].clicked.connect(self.page_down)
-        self.btns[2].clicked.connect(self.rotate)
+        self.btns[2].clicked.connect(lambda x : self.rotate("button"))
         self.btns[3].clicked.connect(lambda x : self.select("chart"))
         self.btns[4].clicked.connect(lambda x : self.select("key"))
         self.btns[5].clicked.connect(self.back)
@@ -102,25 +108,34 @@ class Choose:
         self.WS = not self.WS
     def page_down(self):
         if(self.now_page < self.total_page):
-            self.now_page+=1
+            self.now_page+=1       
             self.pixmap = QPixmap('./test_image'+str(self.now_page)+'.png').scaled(self.w,self.h)
-            if(self.w>self.h):
-                self.w, self.h = self.h, self.w
-                self.form.resize(self.w,self.h+175)
+            if self.rotated % 2==1:
+                self.rotate("pgdn")
+                self.changed = True
+                self.pixmap = QPixmap('./test_image'+str(self.now_page)+'.png').scaled(self.w,self.h)
+            self.rotated = 0
             self.display()
     def page_up(self):
         if(self.now_page>1):
             self.now_page-=1
+            
             self.pixmap = QPixmap('./test_image'+str(self.now_page)+'.png').scaled(self.w,self.h)
-            if(self.w>self.h):
-                self.w, self.h = self.h, self.w
-                self.form.resize(self.w,self.h+175)
+            if self.rotated % 2==1:
+                self.rotate("pgup")
+                self.changed = True
+                self.pixmap = QPixmap('./test_image'+str(self.now_page)+'.png').scaled(self.w,self.h)
+            self.rotated = 0
             self.display()
 
-    def rotate(self):
+    def rotate(self,source):
+        if source == "button":
+            self.rotated= (self.rotated+1)%4
+            self.changed = False
+        self.h, self.w = self.w, self.h
         transform = QTransform().rotate(90)
         self.pixmap = self.pixmap.transformed(transform, Qt.SmoothTransformation)
-        self.h, self.w = self.w, self.h
+        
         self.label.setGeometry(0,50,self.w,self.h)
         self.wsCheckbox.setGeometry(10,self.h+50,25,25)
         self.wsTextLabel.setGeometry(45,self.h+50,500,25)
@@ -128,7 +143,8 @@ class Choose:
         self.btns[bt].setGeometry(round(self.w/bt*(bt-2)),self.h+100,round(self.w/bt),50)
         self.btns[bt+1].setGeometry(round(self.w/bt*(bt-1)),self.h+100,round(self.w/bt),50)
         self.form.resize(self.w,self.h+175)
-        self.display()
+        if source == "button":
+            self.display()
     
     def select(self,source):
         self.img = cv2.imread('./test_image'+str(self.now_page)+'.png')
@@ -137,9 +153,7 @@ class Choose:
         self.source = source
         cv2.setMouseCallback('image',self.draw)
         cv2.imshow('image',self.img)
-        if self.source == "key":
-            self.key_count+=1
-        elif self.source == "chart":
+        if self.source == "chart":
             self.chart_count+=1
 
     def display(self):
@@ -187,6 +201,6 @@ class Choose:
         if self.source == "chart":
             cv2.imwrite('chart-'+str(self.chart_count)+'.png',self.img[y:y+h,x:x+w])
         elif self.source == "key":
-            cv2.imwrite('key-'+str(self.chart_count)+'.png',self.img[y:y+h,x:x+w])
+            cv2.imwrite('key.png',self.img[y:y+h,x:x+w])
 if __name__ == '__main__':
     Choose()

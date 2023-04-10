@@ -1,24 +1,21 @@
 import cv2
-from PyQt5 import QtWidgets
-from PyQt5.QtGui import *
 import numpy as np
-#from sewar.full_ref import ssim 
 from scipy.spatial.distance import *
 import reader
-
+import pathlib
 scale = 30
 
-#pattern_name = "secretkeeper"
-#key_content=["k","p","yo","kfb","k2tog","ssk","cdd","k","k"] 
-
+pattern_name = "secretkeeper"
+key_content=["k","p","yo","kfb","k2tog","ssk","cdd","k","k"] 
+stitch_content = [0,0,1,1,-1,-1,-2,0,0]
 #pattern_name = "wintermute"
 #key_content= ["T4F","ssk","T3B","C4B","k","yo","T3F","p","CDD","T4B","k1tbl","CO/BO"]
 #stitch_content = [0,-1,0,0,0,1,0,0,-2,0,0,0,-1]
 #T4B->C4B, CDD->yo
 
-pattern_name = "oceanbound"
-key_content=["k","yo","k2tog","kfbf","cdd","k","k"]
-stitch_content=[0,1,-1,2,-2,0,0]
+#pattern_name = "oceanbound"
+#key_content=["k","yo","k2tog","kfbf","cdd","k","k"]
+#stitch_content=[0,1,-1,2,-2,0,0]
 
 #pattern_name = "nurmilintu"
 #key_content = ["k","k","k","k","p","k","kfb","k","yo","k","k2tog","k","ssk","k","sk2p","k"]
@@ -52,30 +49,40 @@ class Transfer:
         pass
     def process(self,app,ws):
         self.WS = ws
-        self.read_chart()
-        self.rec = {}
-        self.read_keys()
-        self.split()
-        self.traversal()
         self.reader = reader.Reader()
+        if self.read_chart() == False:
+            self.reader.data_empty(app)
+            return
+        self.rec = {}
+        if self.read_keys() == False:
+            self.reader.data_empty(app)
+            return
+        self.split()
+        if self.traversal() == False:    
+            self.reader.data_empty(app)
         self.reader.getdata(self.written_pattern,self.rec,self.WS)
         self.reader.initUI(app)
     def read_keys(self):
-        original_keys = cv2.imread('./key-1.png',cv2.IMREAD_GRAYSCALE)
-        keys = find_stats(original_keys,scale)
-        if len(keys) == 0:
+        path = pathlib.Path("./key.png")
+        if not path.exists():
             return False
+        original_keys = cv2.imread('./key.png',cv2.IMREAD_GRAYSCALE)
+        keys = find_stats(original_keys,scale)
         key_count = 0
         for x,y,w,h,area in keys: 
             width = round(w/h)
-            if width < 10: #small unwanted slice
+            if width < 10 and width>=1 and w>15 and h>15: #small unwanted slice
                 key = Key(key_content[key_count],original_keys[y:y+h,x:x+w],width)
                 self.key_list[width].append(key)
                 self.rec[key_content[key_count]] = []
+                cv2.imwrite(str(key_count)+'.png',original_keys[y:y+h,x:x+w])
                 key_count+=1
         return True
         
     def read_chart(self):
+        path = pathlib.Path("./chart-1.png")
+        if not path.exists():
+            return False
         self.original = cv2.imread('./chart-1.png',cv2.IMREAD_GRAYSCALE)
         self.grid = find_stats(self.original,scale)
         if len(self.grid) == 0:
@@ -112,6 +119,8 @@ class Transfer:
                 x,y,w,h,area = self.pattern[i][j]
                 g=self.original[y:y+h,x:x+w]         
                 content, stitch = self.compare_grid(g)
+                if content == "error":
+                    return False
                 if content!="":
                     self.rec[content].append([x,y,x+w,y+h])
                     stitch_inc+=stitch
@@ -152,6 +161,7 @@ class Transfer:
                 #print(res == written)
                 #f.write(res+"\n")   
         f.close()
+        return True
     def compare_grid(self,grid):
         if grid.shape[0]<0.8*self.size or grid.shape[1]<0.8*self.size:
             return "",0
@@ -159,16 +169,21 @@ class Transfer:
             return "k",0
         width = round(grid.shape[1]/grid.shape[0])
         res = self.cmpsim(grid,width)
+        if res == -1:
+            return "error",0
         return [self.key_list[width][res].abbr, stitch_content[res]]
     def cmpsim(self,grid,width):
         grid = cv2.resize(grid,(self.size*width,self.size))
         key = [self.key_list[width][i].symbol for i in range(len(self.key_list[width]))]
+        if len(key)==0:
+            return -1
         gmean = np.mean(grid)
         diff =[abs(gmean-np.mean(key[i])) for i in range(len(key))]
-        sim=[0 for i in range(len(key))]
+        sim=[-1e7 for i in range(len(key))]
         for i in range(len(key)):
             if (not isBlank(key[i])) and key_content[i]!='k' and diff[i]<10:
                 sim[i]= self.cos(key[i],grid)
+        print(sim)
         return np.argmax(sim)
     
     def cos(self,key,grid):

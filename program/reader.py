@@ -1,11 +1,8 @@
-import tkinter.filedialog
 import sys
 import cv2
-import os
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
-import numpy as np
 
 path ='./chart-1.png'
 written = []
@@ -78,8 +75,7 @@ class Reader():
         self.grid_labels={}
         self.display_choice.setText("")
         self.choosen=''
-        
-    #TODO : pink bar
+
     def drawBar(self):
         self.bar = QPixmap('./icon/blue_bar.png').scaled(self.w,self.hmean)
         self.pink_bar = QPixmap('./icon/pink_bar.png').scaled(self.w,self.hmean)
@@ -113,15 +109,16 @@ class Reader():
         if self.WS == False and self.now%2 == 0:
             self.barLabel.setGeometry(self.barLabel.x(),self.rowPos[(self.pos+1)%self.rowCount]+5,self.barLabel.width(),10)
             self.pointer.setGeometry(self.pointer.x(),self.rowPos[(self.pos+1)%self.rowCount]-(self.hmean//2),self.pointer.width(),self.rowHeight[self.pos])
+            self.patternText.setText("Row "+str(self.now))
         else:
             self.barLabel.setGeometry(self.barLabel.x(),self.rowPos[self.pos]+10,self.barLabel.width(),self.rowHeight[self.pos])
             self.pointer.setGeometry(self.pointer.x(),self.rowPos[self.pos]+10,self.pointer.width(),self.rowHeight[self.pos])
+            self.patternText.setText("Row "+str(self.now)+": "+self.chart[self.row-1])
         if self.now%2==0:
             self.barLabel.setPixmap(self.pink_bar)
         else:
             self.barLabel.setPixmap(self.bar)
         self.pointer.setText(str(self.now))
-        self.patternText.setText("Row "+str(self.now)+": "+self.chart[self.row-1])
     
         
         
@@ -207,6 +204,18 @@ class Reader():
 
         self.patternLabel.mousePressEvent = self.detect
         self.barLabel.mousePressEvent = self.detect_onbar
+    def data_empty(self,app):
+        #TODO: back button
+        self.app = app
+        self.form = QWidget()
+        self.form.resize(1000,100)
+        self.form.show()
+        self.error_label = QLabel(self.form)
+        self.error_label.setText("Error! Data must not be empty.")
+        self.error_label.move(10,10)
+        self.error_label.setFont(QFont('Arial',24))
+        self.error_label.show()
+        
 if __name__ == '__main__':
     reader = Reader()
     app = QApplication(sys.argv)
