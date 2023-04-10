@@ -11,14 +11,14 @@ scale = 30
 #pattern_name = "secretkeeper"
 #key_content=["k","p","yo","kfb","k2tog","ssk","cdd","k","k"] 
 
-pattern_name = "wintermute"
-key_content= ["T4F","ssk","T3B","C4B","k","yo","T3F","p","CDD","T4B","k1tbl","CO/BO"]
-stitch_content = [0,-1,0,0,0,1,0,0,-2,0,0,0,-1]
+#pattern_name = "wintermute"
+#key_content= ["T4F","ssk","T3B","C4B","k","yo","T3F","p","CDD","T4B","k1tbl","CO/BO"]
+#stitch_content = [0,-1,0,0,0,1,0,0,-2,0,0,0,-1]
 #T4B->C4B, CDD->yo
 
-#pattern_name = "oceanbound"
-#key_content=["k","yo","k2tog","kfbf","cdd","k","k"]
-#stitch_content=[0,1,-1,2,-2,0,0]
+pattern_name = "oceanbound"
+key_content=["k","yo","k2tog","kfbf","cdd","k","k"]
+stitch_content=[0,1,-1,2,-2,0,0]
 
 #pattern_name = "nurmilintu"
 #key_content = ["k","k","k","k","p","k","kfb","k","yo","k","k2tog","k","ssk","k","sk2p","k"]
@@ -47,20 +47,21 @@ class Transfer:
     size = 0
     pattern = [] 
     key_list = [[] for i in range(20)]
-
+    written_pattern = []
     def __init__(self):
         pass
-    def process(self,app):
+    def process(self,app,ws):
+        self.WS = ws
         self.read_chart()
         self.rec = {}
         self.read_keys()
         self.split()
         self.traversal()
         self.reader = reader.Reader()
-        self.reader.getdata(self.grid,self.rec)
+        self.reader.getdata(self.written_pattern,self.rec,self.WS)
         self.reader.initUI(app)
     def read_keys(self):
-        original_keys = cv2.imread('../src/'+pattern_name+'_key.png',cv2.IMREAD_GRAYSCALE)
+        original_keys = cv2.imread('./key-1.png',cv2.IMREAD_GRAYSCALE)
         keys = find_stats(original_keys,scale)
         if len(keys) == 0:
             return False
@@ -75,7 +76,7 @@ class Transfer:
         return True
         
     def read_chart(self):
-        self.original = cv2.imread('./1.png',cv2.IMREAD_GRAYSCALE)
+        self.original = cv2.imread('./chart-1.png',cv2.IMREAD_GRAYSCALE)
         self.grid = find_stats(self.original,scale)
         if len(self.grid) == 0:
             return False
@@ -101,9 +102,9 @@ class Transfer:
             for j in range(len(self.key_list[i])):
                 self.key_list[i][j].symbol = cv2.resize(self.key_list[i][j].symbol,(self.size*self.key_list[i][j].width,self.size))
         f=open("../src/"+pattern_name+"_written.txt","r")
-        row=1
         for i in range(len(self.pattern)):
-            
+            kcount = 0
+            pcount = 0
             tmp_list = []
             res=""
             stitch_inc=0
@@ -111,22 +112,44 @@ class Transfer:
                 x,y,w,h,area = self.pattern[i][j]
                 g=self.original[y:y+h,x:x+w]         
                 content, stitch = self.compare_grid(g)
-                self.rec[content].append([x,y,x+w,y+h])
-                stitch_inc+=stitch
                 if content!="":
-                    tmp_list.append(content) 
+                    self.rec[content].append([x,y,x+w,y+h])
+                    stitch_inc+=stitch
+                    flag = False
+                    if content == "k":
+                        kcount+=1;
+                    elif content != "k" and kcount!=0:
+                        tmp_list.append("k"+str(kcount))
+                        kcount=0
+                        if content != "p":
+                            tmp_list.append(content)
+                            flag = True
+                    if content == "p":
+                        pcount+=1
+                    elif content !="p" and pcount!=0:
+                        tmp_list.append("p"+str(pcount))
+                        pcount=0
+                        if content!="k":
+                            tmp_list.append(content)
+                            flag = True
+                    if content !="p" and content!="k" and flag ==False:
+                        tmp_list.append(content) 
             #print(stitch_inc)
+            if kcount!=0:
+                tmp_list.append("k"+str(kcount))
+            if pcount!=0:
+                tmp_list.append("p"+str(pcount))
             if len(tmp_list)>0:
                 written = f.readline()[:-1]
-                res = str(row)+": "+', '.join(tmp_list)
+                res = ', '.join(tmp_list)
                 
-                print(res)
-                row+=1
+                #print(res)
                 ws = written[3:].split(', ')
                 """for w in range(min(len(ws),len(res))):
                     if ws[w]!=tmp_list[w]:
                         print(ws[w]+" / "+tmp_list[w])"""
-                print(res == written)
+                self.written_pattern.append(res)
+                #print(res == written)
                 #f.write(res+"\n")   
         f.close()
     def compare_grid(self,grid):
@@ -157,9 +180,6 @@ class Transfer:
             dist.append(1-cosine(transpose_grid[i],transpose_key[i]))
         sim_ver = 1-cosine(one,dist)
         return sim_ver
-    
-    def setWS(self,flag):
-        self.WS = flag
 
 if __name__ == "__main__":
     Transfer()

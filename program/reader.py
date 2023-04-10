@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 import numpy as np
 
-path ='./1.png'
+path ='./chart-1.png'
 written = []
 with open("../src/wintermute_written.txt", "r") as f:
     for line in f:
@@ -19,12 +19,11 @@ class Reader():
     def __init__(self):
         self.grid_labels={}
         self.choosen = ''
-        self.WS = False
-    def getdata(self,chart,rec):
+        
+    def getdata(self,chart,rec,ws):
         self.chart = chart
         self.rec = rec
-    def setWS(self, flag):
-        self.WS = flag
+        self.WS = ws
     def calcRowHeight(self):
         img = cv2.imread(path,0)
         img = cv2.resize(img,(self.w,self.h))
@@ -36,20 +35,23 @@ class Reader():
         self.rowPos = [block[1] for block in self.rowStats if block[3] > 12]
         self.rowHeight = [block[3] for block in self.rowStats if block[3] > 12]
         self.rowCount = len(self.rowPos)
+        if self.WS == False:
+            self.total_row = self.rowCount*2
+        else:
+            self.total_row = self.rowCount
         self.hmean = round(self.h/len(self.rowPos))
         return
     def choose_grid(self,x,y):
         for abbr in self.rec.keys():
             for p in self.rec[abbr]:
                 if p[0]<=x and x<=p[2] and p[1]<=y and y <= p[3]:
-                    print(abbr)
-                    if(self.choosen!=''):
-                        self.clear_grid(self.choosen)
+                    #print(abbr)
+                    if(self.choosen):
+                        self.clear_grid()
                     self.draw_grid(abbr)
                     return
     def draw_grid(self,abbr):
-        if(abbr in self.grid_labels):
-            self.clear_grid()
+        if(abbr in self.grid_labels.keys()):
             for g in self.grid_labels[abbr]:
                 g.show()
         else:
@@ -70,8 +72,8 @@ class Reader():
                 self.grid_labels[abbr].append(label)
         self.display_choice.setText(abbr)
         self.choosen=abbr
-    def clear_grid(self,abbr):
-        for label in self.grid_labels[abbr]:
+    def clear_grid(self):
+        for label in self.grid_labels[self.choosen]:
             label.hide()
         self.grid_labels={}
         self.display_choice.setText("")
@@ -94,24 +96,45 @@ class Reader():
         self.pointer.setGeometry(self.w+20,self.rowPos[self.pos]+10,self.hmean,self.rowHeight[self.pos])
     
     def setBar(self):
-        self.row = (self.rowCount-self.pos)
-        #self.rowLabel.setText(str(self.row))
-        self.patternText.setText(written[self.row-1])
-        if self.WS == True:
-            if self.row%2==0:
-                self.barLabel.setPixmap(self.pink_bar)
+        self.row = self.rowCount-self.pos
+        
+        if self.WS == False:
+            if self.now %2 == 0:
+                self.now = 2*self.row-1
             else:
-                self.barLabel.setPixmap(self.bar)
-        self.barLabel.setGeometry(self.barLabel.x(),self.rowPos[self.pos]+10,self.barLabel.width(),self.rowHeight[self.pos])
-        self.pointer.setText(str(self.row))
-        self.pointer.setGeometry(self.pointer.x(),self.rowPos[self.pos]+10,self.pointer.width(),self.rowHeight[self.pos])
+                self.now = 2*(self.row-1)
+            if self.now == 0:
+                self.now = self.total_row
+        else:
+            self.now = self.row
+        #self.rowLabel.setText(str(self.row))
+        #self.patternText.setText(written[self.row-1])
+        #print(self.WS,self.now)
+        if self.WS == False and self.now%2 == 0:
+            self.barLabel.setGeometry(self.barLabel.x(),self.rowPos[(self.pos+1)%self.rowCount]+5,self.barLabel.width(),10)
+            self.pointer.setGeometry(self.pointer.x(),self.rowPos[(self.pos+1)%self.rowCount]-(self.hmean//2),self.pointer.width(),self.rowHeight[self.pos])
+        else:
+            self.barLabel.setGeometry(self.barLabel.x(),self.rowPos[self.pos]+10,self.barLabel.width(),self.rowHeight[self.pos])
+            self.pointer.setGeometry(self.pointer.x(),self.rowPos[self.pos]+10,self.pointer.width(),self.rowHeight[self.pos])
+        if self.now%2==0:
+            self.barLabel.setPixmap(self.pink_bar)
+        else:
+            self.barLabel.setPixmap(self.bar)
+        self.pointer.setText(str(self.now))
+        self.patternText.setText("Row "+str(self.now)+": "+self.chart[self.row-1])
+    
+        
+        
+        
     def incRow(self):
-        self.pos = (self.pos+self.rowCount-1)%self.rowCount
+        if self.now%2 == 1:
+            self.pos = (self.pos+self.rowCount-1)%self.rowCount
         self.setBar()
         return
 
     def decRow(self):
-        self.pos = (self.pos+1)%self.rowCount
+        if self.now %2 == 0:
+            self.pos = (self.pos+1)%self.rowCount
         self.setBar()
         return
     
@@ -143,7 +166,7 @@ class Reader():
         
         self.pos=self.rowCount-1
         self.row = 1
-        
+        self.now = 1
         imagePath = ['./icon/cdd.png','','./icon/kfbf.png','./icon/cdd.png','./icon/kfbf.png','./icon/yo.png']
         textSet = ['+','','-','^','v','x']
         QFontDatabase.addApplicationFont("./font/Inconsolata-VariableFont_wdth,wght.ttf")
@@ -174,8 +197,9 @@ class Reader():
         self.patternText = QLabel(self.form)
         self.stscount.setFont(QFont('inconsolata',round(self.hmean/2.5)))
         self.stscount.move(self.w+self.hmean+20,self.buttons[1].y())
-        self.patternText.setFont(QFont('inconsolata',round(self.hmean/3)))
+        self.patternText.setFont(QFont('inconsolata',round(self.hmean/4)))
         self.patternText.setGeometry(10,self.h+10,self.w,self.hmean)
+        self.patternText.setText("Row 1: "+self.chart[0])
         
         self.drawBar()
         self.form.resize(self.hmean*3+self.w,self.h+75)

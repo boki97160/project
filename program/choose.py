@@ -26,8 +26,8 @@ class Choose:
         
         self.now_page=1
         self.total_page=1
-        self.scr_count = 0
-    
+        self.chart_count = 0
+        self.key_count = 0
         self.init_pos = [-1,-1]
         self.drawing=False
 
@@ -63,7 +63,7 @@ class Choose:
         self.selectPattern()
     def next(self):
         #self.rec.read_chart()
-        self.rec.process(self.app)
+        self.rec.process(self.app,self.WS)
         #self.reader.initUI(self.app)
         self.form.hide()
     def choose(self):
@@ -71,21 +71,23 @@ class Choose:
         self.pixmap = QPixmap('./test_image'+str(self.now_page)+'.png').scaled(self.w,self.h)
         self.label = QLabel(self.form)
         self.label.setGeometry(0,50,self.w,self.h)
-        textSet = ['<','>','⟳','Select Chart','< Back','Next >']
-        self.btns = [ QPushButton(self.form) for i in range(6)]
-        for i in range(6):
+        textSet = ['<','>','⟳','Select Chart','Select Key','< Back','Next >']
+        self.btns_num = len(textSet)
+        self.btns = [ QPushButton(self.form) for i in range(self.btns_num)]
+        for i in range(self.btns_num):
             self.btns[i].setText(textSet[i])
             self.btns[i].show()
-        for i in range(4):
-            self.btns[i].setGeometry(round(self.w/4*i),0,round(self.w/4),50)
-        for i in (4,5):
-            self.btns[i].setGeometry(round(self.w/4*(i-2)),self.h+100,round(self.w/4),50)
+        for i in range(self.btns_num-2):
+            self.btns[i].setGeometry(round(self.w/(self.btns_num-2)*i),0,round(self.w/(self.btns_num-2)),50)
+        for i in (self.btns_num-2,self.btns_num-1):
+            self.btns[i].setGeometry(round(self.w/(self.btns_num-2)*(i-2)),self.h+100,round(self.w/(self.btns_num-2)),50)
         self.btns[0].clicked.connect(self.page_up)
         self.btns[1].clicked.connect(self.page_down)
         self.btns[2].clicked.connect(self.rotate)
-        self.btns[3].clicked.connect(self.select)
-        self.btns[4].clicked.connect(self.back)
-        self.btns[5].clicked.connect(self.next)
+        self.btns[3].clicked.connect(lambda x : self.select("chart"))
+        self.btns[4].clicked.connect(lambda x : self.select("key"))
+        self.btns[5].clicked.connect(self.back)
+        self.btns[6].clicked.connect(self.next)
         self.wsCheckbox = QCheckBox(self.form)
         self.wsCheckbox.setGeometry(10,self.h+50,25,25)
         self.wsCheckbox.show()
@@ -98,8 +100,6 @@ class Choose:
         self.display()
     def changeState(self):
         self.WS = not self.WS
-        self.rec.setWS(self.WS)
-        self.reader.setWS(self.WS)
     def page_down(self):
         if(self.now_page < self.total_page):
             self.now_page+=1
@@ -124,18 +124,23 @@ class Choose:
         self.label.setGeometry(0,50,self.w,self.h)
         self.wsCheckbox.setGeometry(10,self.h+50,25,25)
         self.wsTextLabel.setGeometry(45,self.h+50,500,25)
-        self.btns[4].setGeometry(round(self.w/4*2),self.h+100,round(self.w/4),50)
-        self.btns[5].setGeometry(round(self.w/4*3),self.h+100,round(self.w/4),50)
+        bt = self.btns_num-2
+        self.btns[bt].setGeometry(round(self.w/bt*(bt-2)),self.h+100,round(self.w/bt),50)
+        self.btns[bt+1].setGeometry(round(self.w/bt*(bt-1)),self.h+100,round(self.w/bt),50)
         self.form.resize(self.w,self.h+175)
         self.display()
     
-    def select(self):
+    def select(self,source):
         self.img = cv2.imread('./test_image'+str(self.now_page)+'.png')
         cv2.namedWindow('image',0)
         cv2.resizeWindow('image',self.w,self.h)
+        self.source = source
         cv2.setMouseCallback('image',self.draw)
         cv2.imshow('image',self.img)
-        self.scr_count+=1
+        if self.source == "key":
+            self.key_count+=1
+        elif self.source == "chart":
+            self.chart_count+=1
 
     def display(self):
         self.label.setPixmap(self.pixmap)
@@ -179,6 +184,9 @@ class Choose:
         coords = cv2.findNonZero(~gray)
         x, y, w, h = cv2.boundingRect(coords)
         print(y,y+h,x,x+w)
-        cv2.imwrite(str(self.scr_count)+'.png',self.img[y:y+h,x:x+w])
+        if self.source == "chart":
+            cv2.imwrite('chart-'+str(self.chart_count)+'.png',self.img[y:y+h,x:x+w])
+        elif self.source == "key":
+            cv2.imwrite('key-'+str(self.chart_count)+'.png',self.img[y:y+h,x:x+w])
 if __name__ == '__main__':
     Choose()
