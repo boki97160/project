@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 from scipy.spatial.distance import *
-import reader
+import reader, input_form
 import pathlib
 scale = 30
 
@@ -50,19 +50,21 @@ class Transfer:
     def process(self,app,ws):
         self.WS = ws
         self.reader = reader.Reader()
+        self.input_key = input_form.Input_keys()
         if self.read_chart() == False:
             self.reader.data_empty(app)
             return
         self.rec = {}
-        if self.read_keys() == False:
+        if self.read_keys(app) == False:
             self.reader.data_empty(app)
             return
-        self.split()
-        if self.traversal() == False:    
+        """self.split()
+        if self.traversal() == False or len(self.written_pattern)==0:    
             self.reader.data_empty(app)
+            return
         self.reader.getdata(self.written_pattern,self.rec,self.WS)
-        self.reader.initUI(app)
-    def read_keys(self):
+        self.reader.initUI(app)"""
+    def read_keys(self,app):
         path = pathlib.Path("./key.png")
         if not path.exists():
             return False
@@ -72,11 +74,13 @@ class Transfer:
         for x,y,w,h,area in keys: 
             width = round(w/h)
             if width < 10 and width>=1 and w>15 and h>15: #small unwanted slice
-                key = Key(key_content[key_count],original_keys[y:y+h,x:x+w],width)
+                key = Key("-",original_keys[y:y+h,x:x+w],width)
                 self.key_list[width].append(key)
                 self.rec[key_content[key_count]] = []
                 cv2.imwrite(str(key_count)+'.png',original_keys[y:y+h,x:x+w])
                 key_count+=1
+        self.input_key.initUI(app)
+        self.input_key.input_abbr(key_count)
         return True
         
     def read_chart(self):
@@ -183,7 +187,6 @@ class Transfer:
         for i in range(len(key)):
             if (not isBlank(key[i])) and key_content[i]!='k' and diff[i]<10:
                 sim[i]= self.cos(key[i],grid)
-        print(sim)
         return np.argmax(sim)
     
     def cos(self,key,grid):

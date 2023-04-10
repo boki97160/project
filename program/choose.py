@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import *
 from pdf2image import convert_from_path
 from skimage.measure import label as tag
 import numpy as np
-import recognition, reader
+import recognition, reader, input_form
 
 class Choose:
     
