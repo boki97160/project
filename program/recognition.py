@@ -1,24 +1,26 @@
 import cv2
 import numpy as np
 from scipy.spatial.distance import *
-import reader, input_form
+import reader
 import pathlib
+import subprocess
+import sys
 scale = 30
 
 pattern_name = "secretkeeper"
-key_content=["k","p","yo","kfb","k2tog","ssk","cdd","k","k"] 
-stitch_content = [0,0,1,1,-1,-1,-2,0,0]
+#key_content=["k","p","yo","kfb","k2tog","ssk","cdd","k","k"] 
+#stitch_content = [0,0,1,1,-1,-1,-2,0,0]
 #pattern_name = "wintermute"
-#key_content= ["T4F","ssk","T3B","C4B","k","yo","T3F","p","CDD","T4B","k1tbl","CO/BO"]
+#self.key_content= ["T4F","ssk","T3B","C4B","k","yo","T3F","p","CDD","T4B","k1tbl","CO/BO"]
 #stitch_content = [0,-1,0,0,0,1,0,0,-2,0,0,0,-1]
 #T4B->C4B, CDD->yo
 
 #pattern_name = "oceanbound"
-#key_content=["k","yo","k2tog","kfbf","cdd","k","k"]
+#self.key_content=["k","yo","k2tog","kfbf","cdd","k","k"]
 #stitch_content=[0,1,-1,2,-2,0,0]
 
 #pattern_name = "nurmilintu"
-#key_content = ["k","k","k","k","p","k","kfb","k","yo","k","k2tog","k","ssk","k","sk2p","k"]
+#self.key_content = ["k","k","k","k","p","k","kfb","k","yo","k","k2tog","k","ssk","k","sk2p","k"]
 def find_stats(original, scale):
     src= cv2.threshold(original,250,255,cv2.THRESH_BINARY_INV)[1]
     kernel = cv2.getStructuringElement(cv2.MORPH_CROSS,(scale,1))
@@ -44,43 +46,64 @@ class Transfer:
     size = 0
     pattern = [] 
     key_list = [[] for i in range(20)]
+    key_width = []
+    key_img = []
     written_pattern = []
+    
     def __init__(self):
         pass
     def process(self,app,ws):
         self.WS = ws
         self.reader = reader.Reader()
-        self.input_key = input_form.Input_keys()
         if self.read_chart() == False:
             self.reader.data_empty(app)
             return
         self.rec = {}
+        self.read_keys(app)
         if self.read_keys(app) == False:
             self.reader.data_empty(app)
             return
-        """self.split()
+        
+        subprocess.call([sys.executable,"input_form.py"])
+        self.read_key_content()
+        self.split()
         if self.traversal() == False or len(self.written_pattern)==0:    
             self.reader.data_empty(app)
             return
         self.reader.getdata(self.written_pattern,self.rec,self.WS)
-        self.reader.initUI(app)"""
+        self.reader.initUI(app)
+    def read_key_content(self):
+        fk = open("key_content.txt","r+")
+        fk.readline()
+        self.key_content = fk.readline().split(',')
+        self.stitch_content = fk.readline().split(',')
+        print(self.key_content)
+        print(self.stitch_content)
+        for i in range(len(self.key_content)-1):
+            self.rec[self.key_content[i]] = []
+            self.stitch_content[i] = int(self.stitch_content[i])
+            key = Key(self.key_content[i],self.key_img[i],self.key_width[i])
+            self.key_list[self.key_width[i]].append(key)
+        return True
+
     def read_keys(self,app):
+        
         path = pathlib.Path("./key.png")
         if not path.exists():
             return False
+        fk = open("key_content.txt","r+")
         original_keys = cv2.imread('./key.png',cv2.IMREAD_GRAYSCALE)
         keys = find_stats(original_keys,scale)
-        key_count = 0
+        self.key_count = 0
         for x,y,w,h,area in keys: 
             width = round(w/h)
             if width < 10 and width>=1 and w>15 and h>15: #small unwanted slice
-                key = Key("-",original_keys[y:y+h,x:x+w],width)
-                self.key_list[width].append(key)
-                self.rec[key_content[key_count]] = []
-                cv2.imwrite(str(key_count)+'.png',original_keys[y:y+h,x:x+w])
-                key_count+=1
-        self.input_key.initUI(app)
-        self.input_key.input_abbr(key_count)
+                self.key_img.append(original_keys[y:y+h,x:x+w])
+                self.key_width.append(width)
+                cv2.imwrite(str(self.key_count)+'.png',original_keys[y:y+h,x:x+w])
+                self.key_count+=1
+        fk.write(str(self.key_count)+'\n')
+        fk.close()
         return True
         
     def read_chart(self):
@@ -112,7 +135,7 @@ class Transfer:
         for i in range(len(self.key_list)):
             for j in range(len(self.key_list[i])):
                 self.key_list[i][j].symbol = cv2.resize(self.key_list[i][j].symbol,(self.size*self.key_list[i][j].width,self.size))
-        f=open("../src/"+pattern_name+"_written.txt","r")
+        #f=open("../src/"+pattern_name+"_written.txt","r")
         for i in range(len(self.pattern)):
             kcount = 0
             pcount = 0
@@ -153,18 +176,18 @@ class Transfer:
             if pcount!=0:
                 tmp_list.append("p"+str(pcount))
             if len(tmp_list)>0:
-                written = f.readline()[:-1]
+                #written = f.readline()[:-1]
                 res = ', '.join(tmp_list)
                 
                 #print(res)
-                ws = written[3:].split(', ')
+                #ws = written[3:].split(', ')
                 """for w in range(min(len(ws),len(res))):
                     if ws[w]!=tmp_list[w]:
                         print(ws[w]+" / "+tmp_list[w])"""
                 self.written_pattern.append(res)
                 #print(res == written)
                 #f.write(res+"\n")   
-        f.close()
+        #f.close()
         return True
     def compare_grid(self,grid):
         if grid.shape[0]<0.8*self.size or grid.shape[1]<0.8*self.size:
@@ -175,7 +198,7 @@ class Transfer:
         res = self.cmpsim(grid,width)
         if res == -1:
             return "error",0
-        return [self.key_list[width][res].abbr, stitch_content[res]]
+        return [self.key_list[width][res].abbr, self.stitch_content[res]]
     def cmpsim(self,grid,width):
         grid = cv2.resize(grid,(self.size*width,self.size))
         key = [self.key_list[width][i].symbol for i in range(len(self.key_list[width]))]
@@ -185,7 +208,7 @@ class Transfer:
         diff =[abs(gmean-np.mean(key[i])) for i in range(len(key))]
         sim=[-1e7 for i in range(len(key))]
         for i in range(len(key)):
-            if (not isBlank(key[i])) and key_content[i]!='k' and diff[i]<10:
+            if (not isBlank(key[i])) and self.key_content[i]!='k' and diff[i]<10:
                 sim[i]= self.cos(key[i],grid)
         return np.argmax(sim)
     

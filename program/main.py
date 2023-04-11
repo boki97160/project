@@ -30,7 +30,7 @@ class Start():
         else:
             self.form.hide()
             #os.makedirs('./data/'+text)
-            os.system("python choose.py")
+            os.system("python controller.py")
 
 if __name__ == '__main__':
     Start()

@@ -2,19 +2,20 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 import sys
-import cv2
 
 
+f = open("key_content.txt","r+")
 
 class Input_keys:
     def __init__(self):
         pass
-    def initUI(self,app):
+    def initUI(self,app,key_count):
         self.app = app
         self.form = QWidget()
         # TODO: form size
         self.form.resize(1100,800)
         self.form.show()
+        self.input_abbr(p)
         
     def input_abbr(self,key_count):
         self.key_count = key_count
@@ -35,6 +36,7 @@ class Input_keys:
         self.nextButton.setGeometry(10,700,100,50)
         self.nextButton.clicked.connect(lambda x :self.getData())
         self.nextButton.show()
+        
     def refresh(self):
         for label in self.abbr_label:
             for item in label:
@@ -74,14 +76,19 @@ class Input_keys:
         self.refresh()
     def getData(self):
         self.data_list = ["" for i in range(self.key_count)]
+        self.stitch = [0 for i in range(self.key_count)]
         for i in range(self.key_count):  
             if i in self.avai: 
                 self.data_list[i] = self.abbr_label[self.avai.index(i)][1].text()
-        
+                self.stitch[i] = str(self.abbr_label[self.avai.index(i)][2].value())
+        f.write(",".join(self.data_list)+',\n')
+        f.write(",".join(self.stitch)+',\n')
+        f.close()
+        sys.exit(0)
 if __name__ == "__main__":
+    p = int(f.readline())
     app = QApplication(sys.argv)
     ik = Input_keys()
-    ik.initUI(app)
-    ik.input_abbr(8)
+    ik.initUI(app,p)
     sys.exit(app.exec_())
     
