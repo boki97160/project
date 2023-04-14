@@ -125,18 +125,14 @@ class Reader():
         
         
     def incRow(self):
-        if self.now%2 == 1:
-            self.pos = (self.pos+self.rowCount-1)%self.rowCount
-        elif self.WS:
+        if self.now%2 == 1 or self.WS:
             self.pos = (self.pos+self.rowCount-1)%self.rowCount
         self.setBar()
         return
 
     def decRow(self):
-        if self.now %2 == 0:
+        if self.now %2 == 0 or self.WS:
             self.pos = (self.pos+1)%self.rowCount
-        elif not self.WS:
-            self.pos = (self.pos+self.rowCount-1)%self.rowCount
         self.setBar()
         return
     
