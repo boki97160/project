@@ -50,10 +50,10 @@ class Choose:
     
     def convert(self):
         #convert image
-        """images = convert_from_path(self.file_path,300,poppler_path=r'C:\Program Files\poppler-0.67.0\bin') #DPI
+        images = convert_from_path(self.file_path,300,poppler_path=r'C:\Program Files\poppler-0.67.0\bin') #DPI
         for i, image in enumerate(images):
             fname = 'test_image'+str(i+1)+'.png' #path
-            image.save(fname, "PNG")"""
+            image.save(fname, "PNG")
         self.choose()
     def back(self):
         self.btn.show()
