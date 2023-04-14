@@ -76,7 +76,7 @@ class Input_keys:
         self.refresh()
     def getData(self):
         self.data_list = ["" for i in range(self.key_count)]
-        self.stitch = [0 for i in range(self.key_count)]
+        self.stitch = ["0" for i in range(self.key_count)]
         for i in range(self.key_count):  
             if i in self.avai: 
                 self.data_list[i] = self.abbr_label[self.avai.index(i)][1].text()

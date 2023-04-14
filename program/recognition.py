@@ -7,20 +7,6 @@ import subprocess
 import sys
 scale = 30
 
-pattern_name = "secretkeeper"
-#key_content=["k","p","yo","kfb","k2tog","ssk","cdd","k","k"] 
-#stitch_content = [0,0,1,1,-1,-1,-2,0,0]
-#pattern_name = "wintermute"
-#self.key_content= ["T4F","ssk","T3B","C4B","k","yo","T3F","p","CDD","T4B","k1tbl","CO/BO"]
-#stitch_content = [0,-1,0,0,0,1,0,0,-2,0,0,0,-1]
-#T4B->C4B, CDD->yo
-
-#pattern_name = "oceanbound"
-#self.key_content=["k","yo","k2tog","kfbf","cdd","k","k"]
-#stitch_content=[0,1,-1,2,-2,0,0]
-
-#pattern_name = "nurmilintu"
-#self.key_content = ["k","k","k","k","p","k","kfb","k","yo","k","k2tog","k","ssk","k","sk2p","k"]
 def find_stats(original, scale):
     src= cv2.threshold(original,250,255,cv2.THRESH_BINARY_INV)[1]
     kernel = cv2.getStructuringElement(cv2.MORPH_CROSS,(scale,1))
@@ -56,11 +42,13 @@ class Transfer:
         self.WS = ws
         self.reader = reader.Reader()
         if self.read_chart() == False:
+            print("chart")
             self.reader.data_empty(app)
             return
         self.rec = {}
         self.read_keys(app)
         if self.read_keys(app) == False:
+            print("key")
             self.reader.data_empty(app)
             return
         
@@ -68,22 +56,26 @@ class Transfer:
         self.read_key_content()
         self.split()
         if self.traversal() == False or len(self.written_pattern)==0:    
+            print("traversal")
             self.reader.data_empty(app)
             return
         self.reader.getdata(self.written_pattern,self.rec,self.WS)
         self.reader.initUI(app)
     def read_key_content(self):
+        self.rec["k"] = []
         fk = open("key_content.txt","r+")
         fk.readline()
         self.key_content = fk.readline().split(',')
         self.stitch_content = fk.readline().split(',')
-        print(self.key_content)
-        print(self.stitch_content)
+        """print(self.key_content)
+        print(self.stitch_content)"""
         for i in range(len(self.key_content)-1):
+            print(self.key_content[i])
             self.rec[self.key_content[i]] = []
             self.stitch_content[i] = int(self.stitch_content[i])
             key = Key(self.key_content[i],self.key_img[i],self.key_width[i])
             self.key_list[self.key_width[i]].append(key)
+        fk.close()
         return True
 
     def read_keys(self,app):
@@ -147,7 +139,7 @@ class Transfer:
                 g=self.original[y:y+h,x:x+w]         
                 content, stitch = self.compare_grid(g)
                 if content == "error":
-                    return False
+                    continue
                 if content!="":
                     self.rec[content].append([x,y,x+w,y+h])
                     stitch_inc+=stitch
@@ -210,6 +202,11 @@ class Transfer:
         for i in range(len(key)):
             if (not isBlank(key[i])) and self.key_content[i]!='k' and diff[i]<10:
                 sim[i]= self.cos(key[i],grid)
+                """cv2.imshow('key',key[i])
+                cv2.imshow('grid',grid)
+                cv2.waitKey(0)
+                cv2.destroyAllWindows()"""
+
         return np.argmax(sim)
     
     def cos(self,key,grid):

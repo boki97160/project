@@ -103,6 +103,7 @@ class Reader():
                 self.now = self.total_row
         else:
             self.now = self.row
+        print(self.now,self.row)
         #self.rowLabel.setText(str(self.row))
         #self.patternText.setText(written[self.row-1])
         #print(self.WS,self.now)
@@ -126,12 +127,16 @@ class Reader():
     def incRow(self):
         if self.now%2 == 1:
             self.pos = (self.pos+self.rowCount-1)%self.rowCount
+        elif self.WS:
+            self.pos = (self.pos+self.rowCount-1)%self.rowCount
         self.setBar()
         return
 
     def decRow(self):
         if self.now %2 == 0:
             self.pos = (self.pos+1)%self.rowCount
+        elif not self.WS:
+            self.pos = (self.pos+self.rowCount-1)%self.rowCount
         self.setBar()
         return
     
