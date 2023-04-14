@@ -184,16 +184,17 @@ class Choose:
     def crop(self,screenshot):
         self.img = cv2.cvtColor(screenshot,cv2.COLOR_BGR2GRAY)
         img =  cv2.threshold(self.img,250,255,cv2.THRESH_BINARY_INV)[1]
-        """labeled,num=tag(img,background=0,return_num=True)
-        max_label=0
-        max_num=0
-        for i in range(1,num+1):
-            sub_num = np.sum(labeled==i)
-            if sub_num>max_num:
-                max_num=sub_num
-                max_label=i
-        if max_label>0:
-            img[labeled!=max_label]=0"""
+        if self.source == "chart":
+            labeled,num=tag(img,background=0,return_num=True)
+            max_label=0
+            max_num=0
+            for i in range(1,num+1):
+                sub_num = np.sum(labeled==i)
+                if sub_num>max_num:
+                    max_num=sub_num
+                    max_label=i
+            if max_label>0:
+                img[labeled!=max_label]=0
         gray = 255*(img < 128).astype(np.uint8)
         coords = cv2.findNonZero(~gray)
         x, y, w, h = cv2.boundingRect(coords)

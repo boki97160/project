@@ -3,7 +3,7 @@ import cv2
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
-
+import json
 path ='./chart-1.png'
 written = []
 with open("../src/wintermute_written.txt", "r") as f:
@@ -17,10 +17,13 @@ class Reader():
         self.grid_labels={}
         self.choosen = ''
         
-    def getdata(self,chart,rec,ws):
-        self.chart = chart
-        self.rec = rec
-        self.WS = ws
+    def getdata(self):
+        with open("chart.json", 'r') as j:
+            data = json.loads(j.read())
+        self.chart = data["pattern"]
+        self.WS = data["WS"]
+        with open("pos.json", 'r') as j:
+            self.rec = json.loads(j.read())
     def calcRowHeight(self):
         img = cv2.imread(path,0)
         img = cv2.resize(img,(self.w,self.h))
@@ -220,5 +223,7 @@ class Reader():
 if __name__ == '__main__':
     reader = Reader()
     app = QApplication(sys.argv)
+    reader.getdata()
     reader.initUI(app)
+    
     sys.exit(app.exec_())

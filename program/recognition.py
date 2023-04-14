@@ -5,6 +5,7 @@ import reader
 import pathlib
 import subprocess
 import sys
+import json
 scale = 30
 
 def find_stats(original, scale):
@@ -46,7 +47,6 @@ class Transfer:
             self.reader.data_empty(app)
             return
         self.rec = {}
-        self.read_keys(app)
         if self.read_keys(app) == False:
             print("key")
             self.reader.data_empty(app)
@@ -59,31 +59,38 @@ class Transfer:
             print("traversal")
             self.reader.data_empty(app)
             return
-        self.reader.getdata(self.written_pattern,self.rec,self.WS)
+        json_file = open("./chart.json","w+")
+        data = {"pattern":self.written_pattern,"WS":self.WS}
+        json.dump(data,json_file)
+        json_file.close()
+        json_file = open("./pos.json","w+")
+        print(type(self.rec["k"]))
+        json.dump(self.rec,json_file)
+        json_file.close()
+        self.reader.getdata()
         self.reader.initUI(app)
     def read_key_content(self):
         self.rec["k"] = []
-        fk = open("key_content.txt","r+")
-        fk.readline()
-        self.key_content = fk.readline().split(',')
-        self.stitch_content = fk.readline().split(',')
-        """print(self.key_content)
-        print(self.stitch_content)"""
+        
+        json_file = open("./key_content.json","r+")
+        self.data = json.load(json_file)
+        self.key_content = self.data['abbr']
+        self.stitch_content = self.data['sts']
         for i in range(len(self.key_content)-1):
-            print(self.key_content[i])
             self.rec[self.key_content[i]] = []
             self.stitch_content[i] = int(self.stitch_content[i])
             key = Key(self.key_content[i],self.key_img[i],self.key_width[i])
             self.key_list[self.key_width[i]].append(key)
-        fk.close()
+        json_file.close()
         return True
 
     def read_keys(self,app):
         
+        
         path = pathlib.Path("./key.png")
         if not path.exists():
             return False
-        fk = open("key_content.txt","r+")
+        
         original_keys = cv2.imread('./key.png',cv2.IMREAD_GRAYSCALE)
         keys = find_stats(original_keys,scale)
         self.key_count = 0
@@ -94,8 +101,13 @@ class Transfer:
                 self.key_width.append(width)
                 cv2.imwrite(str(self.key_count)+'.png',original_keys[y:y+h,x:x+w])
                 self.key_count+=1
-        fk.write(str(self.key_count)+'\n')
-        fk.close()
+        json_file = open("./key_content.json","w+")
+        self.data = {}
+        self.data["width"]=self.key_width
+        self.data["key_count"] = self.key_count
+
+        json.dump(self.data,json_file)
+        json_file.close()
         return True
         
     def read_chart(self):
@@ -141,7 +153,7 @@ class Transfer:
                 if content == "error":
                     continue
                 if content!="":
-                    self.rec[content].append([x,y,x+w,y+h])
+                    self.rec[content].append([int(x),int(y),int(x+w),int(y+h)])
                     stitch_inc+=stitch
                     flag = False
                     if content == "k":
