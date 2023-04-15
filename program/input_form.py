@@ -49,7 +49,6 @@ class Input_keys:
             for item in label:
                 item.hide()
         self.abbr_label = []
-        print(len(self.avai),len(self.width))
         for i in range(len(self.avai)):
             imgLabel = QLabel(self.form)
             pixmap = QPixmap('./'+str(self.avai[i])+'.png').scaled(self.width[i]*self.imgheight,self.imgheight)

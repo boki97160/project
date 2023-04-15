@@ -12,14 +12,15 @@ import recognition, reader
 
 class Choose:
     
-    def __init__(self):
-        self.app = QApplication(sys.argv)
+    def __init__(self,app):
+        #self.app = QApplication(sys.argv)
+        self.app = app
         self.screen = QApplication.desktop()
         self.rec = recognition.Transfer()
         self.reader = reader.Reader()
         self.form = QWidget()
         self.init_data()
-        sys.exit(self.app.exec_())
+        #sys.exit(self.app.exec_())
     def init_data(self):
         self.h = self.screen.height()-300
         self.w = round(self.h*210/297)
@@ -41,6 +42,7 @@ class Choose:
         self.btn.setText("Select Pattern")
         self.btn.clicked.connect(self.getPath)
         self.btn.setGeometry(round(self.w/2-self.w/10),round(self.h/2-25),round(self.w/5),50)
+    
     def getPath(self):
         window = tkinter.Tk()
         window.withdraw()     
@@ -50,10 +52,10 @@ class Choose:
     
     def convert(self):
         #convert image
-        images = convert_from_path(self.file_path,300,poppler_path=r'C:\Program Files\poppler-0.67.0\bin') #DPI
+        """images = convert_from_path(self.file_path,300,poppler_path=r'C:\Program Files\poppler-0.67.0\bin') #DPI
         for i, image in enumerate(images):
             fname = 'test_image'+str(i+1)+'.png' #path
-            image.save(fname, "PNG")
+            image.save(fname, "PNG")"""
         self.choose()
     def back(self):
         self.btn.show()
@@ -65,7 +67,6 @@ class Choose:
         self.init_data()
         self.selectPattern()
     def next(self):
-        #TODO :change to input.py 
         self.rec.process(self.app,self.WS)
         self.form.hide()
     def choose(self):
@@ -204,4 +205,6 @@ class Choose:
         elif self.source == "key":
             cv2.imwrite('key.png',self.img[y:y+h,x:x+w])
 if __name__ == '__main__':
-    Choose()
+    app = QApplication(sys.argv)
+    Choose(app)
+    sys.exit(app.exec_())
