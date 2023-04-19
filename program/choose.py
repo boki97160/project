@@ -2,6 +2,7 @@ import tkinter, tkinter.filedialog
 import sys
 import cv2
 import os
+import fitz
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
@@ -51,13 +52,21 @@ class Choose:
     
     def convert(self): # pdf 轉成 一頁一頁
         #convert image
-        images = convert_from_path(self.file_path,300,poppler_path=r'C:\Program Files\poppler-0.67.0\bin') #DPI       
+        """images = convert_from_path(self.file_path,300,poppler_path=r'C:\Program Files\poppler-0.67.0\bin') #DPI       
         self.path_name = self.file_path.split('/')
         #print('file_name:', self.path_name[-1][:-4])
 
         for i, image in enumerate(images):
             fname = 'test_image'+str(i+1)+'.png' #path
-            image.save(fname, "PNG")
+            image.save(fname, "PNG")"""
+        self.path_name = self.file_path.split('/')
+        doc = fitz.open(self.file_path)
+        for page_index in range(doc.page_count):
+            page = doc.load_page(page_index)  
+            pix = page.get_pixmap(dpi=300)
+            nppix = np.frombuffer(buffer=pix.samples, dtype=np.uint8).reshape((pix.height, pix.width, 3))
+            fname = 'test_image'+str(page_index+1)+'.png'
+            cv2.imwrite(fname,cv2.cvtColor(nppix,cv2.COLOR_RGB2BGR))
         self.choose()
     
     def back(self):

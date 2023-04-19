@@ -1,11 +1,11 @@
-import os, shutil, glob
 
-historyfile = './HistoryRecord/woodlandwalkpattern'
-'''target = r'*.json'
-copy_filename = glob.glob(target)
-for file in copy_filename:
-    shutil.copy(file,historyfile)'''
-print(historyfile.isspace())
-historyfile = ''
-print(historyfile.isspace())
-print(len(historyfile))
+import numpy as np
+import cv2
+import fitz    
+pdffile = '../popular_pattern/ANTLERTOQUE-tincanknits.pdf'
+doc = fitz.open(pdffile)
+for page_index in range(doc.page_count):
+    page = doc.load_page(page_index)  
+    pix = page.get_pixmap(dpi=300)
+    nppix = np.frombuffer(buffer=pix.samples, dtype=np.uint8).reshape((pix.height, pix.width, 3))
+    cv2.imwrite('page'+str(page_index)+'.png',nppix)
