@@ -3,95 +3,29 @@ import cv2
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
-import json, os, glob, shutil
-
-path ='' #有修正
+import json
+path ='./chart-1.png'
 written = []
-dir_max = 5
+with open("../src/wintermute_written.txt", "r") as f:
+    for line in f:
+        written.append(line.strip())
+
+
 
 class Reader():
     def __init__(self):
-        self.path = path
-        self.history = ''
         self.grid_labels={}
         self.choosen = ''
-
-    def historypath(self,filename): # for history.py
-        self.history = filename
-
-    def start(self):
-        self.interface.close()
-        self.getdata()
-        self.initUI(self.app)
         
-    def store(self):
-        self.hsbutton2.deleteLater()
-        self.hsbutton1.deleteLater()
-        self.leavebutton = QPushButton(self.interface)
-        self.leavebutton.setGeometry(QRect(50,70,113,32))
-        layout = QVBoxLayout() # let message and buttom show in GUI together    
-        if len(os.listdir('./HistoryRecord')) >= dir_max :
-            self.leavebutton.setText('History folder is full')
-            content = 'Click the butotn below to show chart. If you want to store this history, please delete other history'              
-        else :
-            self.historyfile = './HistoryRecord/'+self.historyname
-            print('historyfile = ', self.historyfile)
-            if os.path.isdir(self.historyfile):
-                self.leavebutton.setText('This history exist. click it to show pattern')
-                content = 'click this button to show chart'
-            else:
-                os.mkdir(self.historyfile)
-                target = r'*.json'
-                for file in glob.glob(target):
-                    shutil.copy(file,self.historyfile)
-                shutil.copy('./chart-1.png',self.historyfile)
-                shutil.copy('key.png', self.historyfile)
-                content = 'stored already'
-                self.leavebutton.setText('Exit')
-        self.text = QLabel(content,self.interface)
-        self.text.setAlignment(Qt.AlignCenter)            
-        layout.addWidget(self.text)
-        layout.addWidget(self.leavebutton)
-        self.interface.setLayout(layout)         
-
-        self.leavebutton.clicked.connect(self.start)    
-
-    def storehistory(self,app,historyname):
-        self.app = app
-        self.historyname = historyname
-        self.interface = QWidget()
-        self.interface.resize(300,200)
-        self.hsbutton1 = QPushButton(self.interface)
-        self.hsbutton2 = QPushButton(self.interface)
-        self.hsbutton1.setGeometry(QRect(100,70,113,32))
-        self.hsbutton2.setGeometry(QRect(100,100,113,32))
-        self.hsbutton1.setText('store this pattern')
-        self.hsbutton2.setText('Not store this pattern')
-        self.interface.show()
-
-        self.hsbutton1.clicked.connect(self.store)
-        self.hsbutton2.clicked.connect(self.start)
-       
     def getdata(self):
-        if len(self.history) == 0 :
-            chart, pos= 'chart.json', 'pos.json'
-            self.path = 'chart-1.png'
-        else : #history
-            chart = 'HistoryRecord/'+ self.history + '/chart.json'
-            pos = 'HistoryRecord/' + self.history + '/pos.json'
-            self.path = 'HistoryRecord/' + self.history + '/chart-1.png'
-            
-        with open(chart, 'r') as j:
+        with open("chart.json", 'r') as j:
             data = json.loads(j.read())
         self.chart = data["pattern"]
         self.WS = data["WS"]
-        with open(pos, 'r') as j:
+        with open("pos.json", 'r') as j:
             self.rec = json.loads(j.read())
-    
     def calcRowHeight(self):
-        print('path:', self.path)
-
-        img = cv2.imread(self.path,0)       
+        img = cv2.imread(path,0)
         img = cv2.resize(img,(self.w,self.h))
         ret, src= cv2.threshold(img,250,255,cv2.THRESH_BINARY_INV)
         kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(30,1))
@@ -189,7 +123,10 @@ class Reader():
         else:
             self.barLabel.setPixmap(self.bar)
         self.pointer.setText(str(self.now))
-           
+    
+        
+        
+        
     def incRow(self):
         if self.now%2 == 1 or self.WS:
             self.pos = (self.pos+self.rowCount-1)%self.rowCount
@@ -212,13 +149,11 @@ class Reader():
             self.choose_grid(round(event.x()/self.patternLabel.width()*self.original[0]),round(event.y()/self.patternLabel.height()*self.original[1]))
     def detect_onbar(self,event):
         self.choose_grid(round((self.barLabel.x()+event.x())/self.patternLabel.width()*self.original[0])-self.patternLabel.x(),round((self.barLabel.y()+event.y())/self.patternLabel.height()*self.original[1])-self.patternLabel.y())
-    
     def initUI(self,app):
-        print('history file :', self.history)
         self.app = app
         self.screen = QApplication.desktop()
         self.form = QWidget()
-        self.img = QPixmap(self.path)
+        self.img = QPixmap(path)
         self.ratio = min(self.screen.width()/self.img.width(),self.screen.height()/self.img.height())
         self.h = round(self.img.height()*self.ratio*0.8)
         self.w = round(self.img.width()*self.ratio*0.8)

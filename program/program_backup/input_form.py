@@ -40,9 +40,7 @@ class Input_keys:
         self.refresh()
         self.nextButton = QPushButton(self.form)
         self.nextButton.setFont(QFont('inconsolata',12))
-        self.nextButton.setText('show chart')
-        #self.nextButton.setGeometry(10,800-self.imgheight,100,self.imgheight*6//5)
-        self.nextButton.setGeometry(10, 600, 100, self.imgheight*6//5)
+        self.nextButton.setGeometry(10,800-self.imgheight,100,self.imgheight*6//5)
         self.nextButton.clicked.connect(lambda x :self.getData())
         self.nextButton.show()
         
@@ -51,7 +49,6 @@ class Input_keys:
             for item in label:
                 item.hide()
         self.abbr_label = []
-        print(len(self.avai),len(self.width))
         for i in range(len(self.avai)):
             imgLabel = QLabel(self.form)
             pixmap = QPixmap('./'+str(self.avai[i])+'.png').scaled(self.width[i]*self.imgheight,self.imgheight)

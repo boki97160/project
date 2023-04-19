@@ -13,14 +13,14 @@ import recognition, reader
 class Choose:
     
     def __init__(self,app):
-        self.app = app #QApplication(sys.argv)
+        #self.app = QApplication(sys.argv)
+        self.app = app
         self.screen = QApplication.desktop()
         self.rec = recognition.Transfer()
         self.reader = reader.Reader()
         self.form = QWidget()
         self.init_data()
         #sys.exit(self.app.exec_())
-    
     def init_data(self):
         self.h = self.screen.height()-300
         self.w = round(self.h*210/297)
@@ -35,7 +35,8 @@ class Choose:
         self.rotated = 0
         self.changed = False
         self.form.show()
-                
+        
+        
     def selectPattern(self):
         self.btn = QPushButton(self.form)
         self.btn.setText("Select Pattern")
@@ -49,17 +50,13 @@ class Choose:
         self.btn.hide()
         self.convert()
     
-    def convert(self): # pdf 轉成 一頁一頁
+    def convert(self):
         #convert image
-        images = convert_from_path(self.file_path,300,poppler_path=r'C:\Program Files\poppler-0.67.0\bin') #DPI       
-        self.path_name = self.file_path.split('/')
-        #print('file_name:', self.path_name[-1][:-4])
-
+        """images = convert_from_path(self.file_path,300,poppler_path=r'C:\Program Files\poppler-0.67.0\bin') #DPI
         for i, image in enumerate(images):
             fname = 'test_image'+str(i+1)+'.png' #path
-            image.save(fname, "PNG")
+            image.save(fname, "PNG")"""
         self.choose()
-    
     def back(self):
         self.btn.show()
         for i in range(self.btns_num):
@@ -69,12 +66,9 @@ class Choose:
         self.label.setParent(None)
         self.init_data()
         self.selectPattern()
-    
     def next(self):
-        #TODO :change to input.py 
-        self.rec.process(self.app,self.WS,self.path_name[-1][:-4])
+        self.rec.process(self.app,self.WS)
         self.form.hide()
-    
     def choose(self):
         self.check_total_page()
         self.pixmap = QPixmap('./test_image'+str(self.now_page)+'.png')
@@ -210,6 +204,7 @@ class Choose:
             cv2.imwrite('chart-'+str(self.chart_count)+'.png',self.img[y:y+h,x:x+w])
         elif self.source == "key":
             cv2.imwrite('key.png',self.img[y:y+h,x:x+w])
-
-'''if __name__ == '__main__':
-    Choose()'''
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    Choose(app)
+    sys.exit(app.exec_())
