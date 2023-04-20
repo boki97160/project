@@ -15,6 +15,7 @@ class History(QtWidgets.QWidget):
         self.history_dir = './HistoryRecord'
         if not os.path.isdir(self.history_dir):
             os.makedirs(self.history_dir)
+            
         
         self.hs_buttom = QtWidgets.QPushButton(self)
         self.hs_buttom.setGeometry(QtCore.QRect(100,70,113,32))

@@ -37,6 +37,7 @@ class Transfer:
     key_list = [[] for i in range(20)]
     key_ratio = [[] for i in range(20)]
     key_size = [[] for i in range(20)]
+    key_avai = [[] for i in range(20)]
     key_width = []
     key_img = []
     written_pattern = []
@@ -82,11 +83,15 @@ class Transfer:
         self.data = json.load(json_file)
         self.key_content = self.data['abbr']
         self.stitch_content = self.data['sts']
-        for i in range(len(self.key_content)-1):
+        for i in range(len(self.key_content)):
             self.rec[self.key_content[i]] = []
             self.stitch_content[i] = int(self.stitch_content[i])
             key = Key(self.key_content[i],self.key_img[i],self.key_width[i])
             self.key_list[self.key_width[i]].append(key)
+            if self.key_content[i] == "":
+                self.key_avai[self.key_width[i]].append(False)
+            else:
+                self.key_avai[self.key_width[i]].append(True) 
         json_file.close()
         return True
 
@@ -216,27 +221,34 @@ class Transfer:
     def cmpsim(self,grid,width):
         grid = self.crop(grid)
         key = [self.key_list[width][i].symbol for i in range(len(self.key_list[width]))]
+        
+        avai = [self.key_avai[width][i] for i in range(len(self.key_list[width]))]
         if len(key)==0:
             return -1
         ratio = grid.shape[1]/grid.shape[0]
         ratio_diff = [abs(ratio-self.key_ratio[width][i]) for i in range(len(key))]
-        #print(ratio_diff)
         sim=[-1e7 for i in range(len(key))]
         grid = cv2.resize(grid,(self.size*width,self.size))
         diff = [abs(np.sum(grid>250)-np.sum(key[i]>250))/(self.size*self.size) for i in range(len(key))]
-        
+        mean_diff =[abs(np.mean(grid)-np.mean(key[i])) for i in range(len(key))]
         for i in range(len(key)):
-            if (not isBlank(key[i])) and diff[i]<0.1 and ratio_diff[i] < 0.2:
+            if (not isBlank(key[i])) and mean_diff[i]<20 and diff[i]<0.1 and ratio_diff[i] < 0.2 and avai[i]:
                 sim[i]= self.cos(key[i],grid)
 
-        if np.sum(np.asarray(sim)<0) == len(sim):
+        if np.max(sim) == -1e7:
             for i in range(len(key)):
-                if (not isBlank(key[i])):
+                if avai[i] and mean_diff[i]<20:
                     sim[i]= self.cos(key[i],grid)
+        """cv2.imshow('key',key[np.argmax(sim)])
+        cv2.imshow('grid',grid)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()"""
 
         return np.argmax(sim)
     
     def cos(self,key,grid):
+        grid[grid==0] = 1
+        key[key==0] = 1
         transpose_grid = grid.transpose()
         transpose_key = key.transpose()
         dist = []
@@ -254,8 +266,8 @@ class Transfer:
     def crop(self,screenshot):
         if(isBlank(screenshot)):
             return screenshot
-        self.img =  cv2.threshold(screenshot,250,255,cv2.THRESH_BINARY_INV)[1]
-        cnts, _ = cv2.findContours(self.img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        img =  cv2.threshold(screenshot,50,255,cv2.THRESH_BINARY)[1]
+        cnts, _ = cv2.findContours(~img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         cnts = np.concatenate(cnts)
         x, y, w, h = cv2.boundingRect(cnts)
         return screenshot[y:y+h,x:x+w]
