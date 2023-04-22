@@ -132,7 +132,7 @@ class Reader():
                 op = QGraphicsOpacityEffect()
                 op.setOpacity(0.25)
                 label.setGraphicsEffect(op)
-                label_img = QPixmap('./icon/gray.png').scaled(w,h)
+                label_img = QPixmap('./icon/darkpink.png').scaled(w,h)
                 label.setPixmap(label_img)
                 label.show()
                 self.grid_labels[abbr].append(label)

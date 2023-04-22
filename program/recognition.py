@@ -6,30 +6,22 @@ import pathlib
 import subprocess
 import sys
 import json
-import math
+from skimage.measure import label as tag
 scale = 30
-
-def find_stats(original, scale):
-    src= cv2.threshold(original,250,255,cv2.THRESH_BINARY_INV)[1]
-    kernel = cv2.getStructuringElement(cv2.MORPH_CROSS,(scale,1))
-    result1 = cv2.morphologyEx(src, cv2.MORPH_OPEN, kernel)
-    kernel = cv2.getStructuringElement(cv2.MORPH_CROSS,(1,scale))
-    result2 = cv2.morphologyEx(src, cv2.MORPH_OPEN, kernel)
-    table = cv2.bitwise_or(result1,result2)
-    cv2.imwrite('table.png',table)
-    stats= cv2.connectedComponentsWithStats(~table,connectivity=4,ltype=cv2.CV_32S)[2][2:]
-    return stats
-
 
 
 def isBlank(grid):
-    return np.sum(grid >=250)>grid.shape[0]*grid.shape[1]*0.95
+    if len(grid)==0:
+        return True
+    src= cv2.threshold(grid,150,255,cv2.THRESH_BINARY_INV)[1]
+    return np.mean(src)==255 or np.mean(src)==0
 
 class Key:
     def __init__(self,abbr,block,width):
         self.abbr = abbr
         self.width = width
         self.symbol = block
+        self.cropped = block
 
 class Transfer:
     size = 0
@@ -41,7 +33,34 @@ class Transfer:
     key_width = []
     key_img = []
     written_pattern = []
-    
+    def find_table(self,original,thresh):
+        src= cv2.threshold(original,thresh,255,cv2.THRESH_BINARY_INV)[1]
+        kernel = cv2.getStructuringElement(cv2.MORPH_CROSS,(scale,1))
+        result1 = cv2.morphologyEx(src, cv2.MORPH_OPEN, kernel)
+        kernel = cv2.getStructuringElement(cv2.MORPH_CROSS,(1,scale))
+        result2 = cv2.morphologyEx(src, cv2.MORPH_OPEN, kernel)
+        table = cv2.bitwise_or(result1,result2)
+        return table
+    def find_stats(self,original, source):
+        for i in range(6,11):
+            table = self.find_table(original,25*i)
+            if np.mean(table)>20:
+                break
+        
+        if source == "chart":
+            labeled,num=tag(table,background=0,return_num=True)
+            max_label=0
+            max_num=0
+            for i in range(1,num+1):
+                sub_num = np.sum(labeled==i)
+                if sub_num>max_num:
+                    max_num=sub_num
+                    max_label=i
+            if max_label>0:
+                table[labeled!=max_label]=0
+            cv2.imwrite('table.png',table)
+        stats= cv2.connectedComponentsWithStats(~table,connectivity=4,ltype=cv2.CV_32S)[2][2:]
+        return stats
     def __init__(self):
         pass
     def process(self,app,ws,historyname):
@@ -69,7 +88,6 @@ class Transfer:
         json.dump(data,json_file)
         json_file.close()
         json_file = open("./pos.json","w+")
-        print(type(self.rec["k"]))
         json.dump(self.rec,json_file)
         json_file.close()
         
@@ -94,7 +112,36 @@ class Transfer:
                 self.key_avai[self.key_width[i]].append(True) 
         json_file.close()
         return True
+    def find_keys(self,original_keys):
+        src= cv2.threshold(original_keys,250,255,cv2.THRESH_BINARY_INV)[1]
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(self.size,1))
+        result1 = cv2.morphologyEx(src, cv2.MORPH_OPEN, kernel)
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(1,self.size))
+        result2 = cv2.morphologyEx(src, cv2.MORPH_OPEN, kernel)
+        img = cv2.bitwise_or(result1,result2)
 
+        cnts, _ = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        temp = img.copy()
+        temp = cv2.cvtColor(temp,cv2.COLOR_GRAY2BGR)
+        cnts = reversed(cnts)
+        self.key_count = 0
+        for cnt in cnts:
+            peri = cv2.arcLength(cnt, True)
+            cnt = cv2.approxPolyDP(cnt,0.05*peri,True)
+            if len(cnt) == 4 and cv2.isContourConvex(cnt) and cv2.contourArea(cnt)>0.8*self.size**2:
+                
+                x,y,w,h = cv2.boundingRect(cnt)
+                width = round(w/h)
+                rect = original_keys[y:y+h,x:x+w]
+                
+                self.key_img.append(rect)
+                self.key_width.append(width)
+                cv2.imwrite(str(self.key_count)+'.png',rect)
+                
+                #cv2.rectangle(temp,(np.min(y_nonzero),np.max(y_nonzero)),(np.min(x_nonzero),np.max(y_nonzero)),(0,255,0),2)
+                self.key_count+=1   
+
+        
     def read_keys(self,app):
         
         
@@ -103,17 +150,16 @@ class Transfer:
             return False
         
         original_keys = cv2.imread('./key.png',cv2.IMREAD_GRAYSCALE)
-        keys = find_stats(original_keys,scale)
-        cv2.waitKey(0)
+        self.find_keys(original_keys)
+        """keys = self.find_stats(original_keys,"key")
         self.key_count = 0
         for x,y,w,h,area in keys: 
             width = round(w/h)
-            if width < 10 and width>=1 and w>15 and h>15: #small unwanted slice
+            if width < 10 and width>=1 and h>self.size*0.9 and w>self.size*0.9: #small unwanted slice
                 self.key_img.append(original_keys[y:y+h,x:x+w])
                 self.key_width.append(width)
                 cv2.imwrite(str(self.key_count)+'.png',original_keys[y:y+h,x:x+w])
-                
-                self.key_count+=1
+                self.key_count+=1"""
         json_file = open("./key_content.json","w+")
         self.data = {}
         self.data["width"]=self.key_width
@@ -121,14 +167,13 @@ class Transfer:
 
         json.dump(self.data,json_file)
         json_file.close()
-        return True
-        
+        return True   
     def read_chart(self):
         path = pathlib.Path("./chart-1.png")
         if not path.exists():
             return False
         self.original = cv2.imread('./chart-1.png',cv2.IMREAD_GRAYSCALE)
-        self.grid = find_stats(self.original,scale)
+        self.grid = self.find_stats(self.original,"chart")
         if len(self.grid) == 0:
             return False
         self.size = round(np.mean(self.grid[:,3]))
@@ -151,10 +196,11 @@ class Transfer:
     def traversal(self):
         for i in range(len(self.key_list)):
             for j in range(len(self.key_list[i])):
-                self.key_list[i][j].symbol = self.crop(cv2.resize(self.key_list[i][j].symbol,(self.size*self.key_list[i][j].width,self.size)))
-                self.key_ratio[i].append(self.key_list[i][j].symbol.shape[1]/self.key_list[i][j].symbol.shape[0])
-                self.key_size[i].append(self.key_list[i][j].symbol.shape)
-                self.key_list[i][j].symbol = cv2.resize(self.key_list[i][j].symbol,(self.size*self.key_list[i][j].width,self.size))
+                self.key_list[i][j].cropped = self.crop(cv2.resize(self.key_list[i][j].symbol,(self.size*self.key_list[i][j].width,self.size)))
+                self.key_ratio[i].append(self.key_list[i][j].cropped.shape[1]/self.key_list[i][j].cropped.shape[0])
+                self.key_size[i].append(self.key_list[i][j].cropped.shape)
+                self.key_list[i][j].cropped = cv2.resize(self.key_list[i][j].cropped,(self.size*self.key_list[i][j].width,self.size))
+                
         #f=open("../src/"+pattern_name+"_written.txt","r")
         for i in range(len(self.pattern)):
             kcount = 0
@@ -195,33 +241,30 @@ class Transfer:
             if pcount!=0:
                 tmp_list.append("p"+str(pcount))
             if len(tmp_list)>0:
-                #written = f.readline()[:-1]
                 res = ', '.join(tmp_list)
-                
-                #print(res)
-                #ws = written[3:].split(', ')
-                """for w in range(min(len(ws),len(res))):
-                    if ws[w]!=tmp_list[w]:
-                        print(ws[w]+" / "+tmp_list[w])"""
                 self.written_pattern.append(res)
-                #print(res == written)
-                #f.write(res+"\n")   
-        #f.close()
         return True
     def compare_grid(self,grid):
         if grid.shape[0]<0.8*self.size or grid.shape[1]<0.8*self.size:
             return "",0
-        if(isBlank(grid)):
-            return "k",0
+        """if(isBlank(grid)):
+            return "k",0"""
+        
         width = round(grid.shape[1]/grid.shape[0])
+        if width > 10:
+            return "",0
         res = self.cmpsim(grid,width)
         if res == -1:
             return "error",0
         return [self.key_list[width][res].abbr, self.stitch_content[res]]
     def cmpsim(self,grid,width):
-        grid = self.crop(grid)
         key = [self.key_list[width][i].symbol for i in range(len(self.key_list[width]))]
-        
+        mean_diff =[abs(np.mean(grid)-np.mean(key[i])) for i in range(len(key))]
+
+        grid = self.crop(grid)
+
+
+        key = [self.key_list[width][i].cropped for i in range(len(self.key_list[width]))]
         avai = [self.key_avai[width][i] for i in range(len(self.key_list[width]))]
         if len(key)==0:
             return -1
@@ -229,26 +272,22 @@ class Transfer:
         ratio_diff = [abs(ratio-self.key_ratio[width][i]) for i in range(len(key))]
         sim=[-1e7 for i in range(len(key))]
         grid = cv2.resize(grid,(self.size*width,self.size))
-        diff = [abs(np.sum(grid>250)-np.sum(key[i]>250))/(self.size*self.size) for i in range(len(key))]
-        mean_diff =[abs(np.mean(grid)-np.mean(key[i])) for i in range(len(key))]
+        diff = [abs(np.sum(grid<20)-np.sum(key[i]<20))/(self.size*self.size) for i in range(len(key))]
         for i in range(len(key)):
-            if (not isBlank(key[i])) and mean_diff[i]<20 and diff[i]<0.1 and ratio_diff[i] < 0.2 and avai[i]:
+            if mean_diff[i]<10 and diff[i]<0.1 and ratio_diff[i] < 0.1 and avai[i]:
                 sim[i]= self.cos(key[i],grid)
 
         if np.max(sim) == -1e7:
             for i in range(len(key)):
-                if avai[i] and mean_diff[i]<20:
+                if avai[i]:
                     sim[i]= self.cos(key[i],grid)
-        """cv2.imshow('key',key[np.argmax(sim)])
+        cv2.imshow('key',self.key_list[width][np.argmax(sim)].cropped)
         cv2.imshow('grid',grid)
         cv2.waitKey(0)
-        cv2.destroyAllWindows()"""
-
+        cv2.destroyAllWindows()
         return np.argmax(sim)
     
     def cos(self,key,grid):
-        grid[grid==0] = 1
-        key[key==0] = 1
         transpose_grid = grid.transpose()
         transpose_key = key.transpose()
         dist = []
@@ -263,13 +302,27 @@ class Transfer:
             dist.append(1-cosine(grid[i],key[i]))
         sim_hor = 1-cosine(one,dist)
         return sim_ver**2+sim_hor**2
-    def crop(self,screenshot):
-        if(isBlank(screenshot)):
-            return screenshot
-        img =  cv2.threshold(screenshot,50,255,cv2.THRESH_BINARY)[1]
-        cnts, _ = cv2.findContours(~img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    def crop(self,rect):
+        """if(isBlank(screenshot)):
+            return cv2.threshold(screenshot,250,255,cv2.THRESH_BINARY_INV)[1]
+        img = cv2.threshold(screenshot,250,255,cv2.THRESH_BINARY_INV)[1]
+        for i in range(9,5,-1):
+            if np.mean(img)!=0:
+                break
+            img =  cv2.threshold(screenshot,25*i,255,cv2.THRESH_BINARY_INV)[1]
+            
+        cnts, _ = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         cnts = np.concatenate(cnts)
         x, y, w, h = cv2.boundingRect(cnts)
-        return screenshot[y:y+h,x:x+w]
+        return screenshot[y:y+h,x:x+w]"""
+        if not isBlank(rect):
+            y_nonzero, x_nonzero = np.nonzero(rect<200)
+            res = rect[np.min(y_nonzero):np.max(y_nonzero), np.min(x_nonzero):np.max(x_nonzero)]
+            if res.shape[0] != 0 and res.shape[1]!=0:
+                return res
+            else:
+                return rect
+        else:
+            return rect
 if __name__ == "__main__":
     Transfer()
