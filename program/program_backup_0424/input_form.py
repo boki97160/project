@@ -39,19 +39,10 @@ class Input_keys:
         
         self.refresh()
         self.nextButton = QPushButton(self.form)
-        #self.nextButton.setFont(QFont('inconsolata',12))
+        self.nextButton.setFont(QFont('inconsolata',12))
         self.nextButton.setText('show chart')
-        self.nextButton.setStyleSheet('''
-            QPushButton{
-                font-size: 14px;
-                font-family: inconsolata;
-            }
-            QPushButton:hover{
-                color: red;
-            }
-        ''')
         #self.nextButton.setGeometry(10,800-self.imgheight,100,self.imgheight*6//5)
-        self.nextButton.setGeometry(10, 650, 100, self.imgheight*6//5)
+        self.nextButton.setGeometry(10, 600, 100, self.imgheight*6//5)
         self.nextButton.clicked.connect(lambda x :self.getData())
         self.nextButton.show()
         
