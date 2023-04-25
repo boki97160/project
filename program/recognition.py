@@ -14,7 +14,7 @@ def isBlank(grid):
     if len(grid)==0:
         return True
     src= cv2.threshold(grid,150,255,cv2.THRESH_BINARY_INV)[1]
-    return np.mean(src)==255 or np.mean(src)==0
+    return np.mean(src)==0
 
 class Key:
     def __init__(self,abbr,block,width):
@@ -34,6 +34,7 @@ class Transfer:
     key_width = []
     key_img = []
     written_pattern = []
+    k_pos = []
     def find_table(self,src):
         kernel = cv2.getStructuringElement(cv2.MORPH_CROSS,(scale,1))
         result1 = cv2.morphologyEx(src, cv2.MORPH_OPEN, kernel)
@@ -102,7 +103,6 @@ class Transfer:
         #self.reader.getdata()
         #self.reader.initUI(app)
     def read_key_content(self):
-        self.rec["k"] = []
         json_file = open("./key_content.json","r+")
         self.data = json.load(json_file)
         self.key_content = self.data['abbr']
@@ -227,13 +227,20 @@ class Transfer:
     def traversal(self):
         for i in range(len(self.key_list)):
             for j in range(len(self.key_list[i])):
-                self.key_list[i][j].cropped = self.crop(cv2.resize(self.key_list[i][j].symbol,(self.size*self.key_list[i][j].width,self.size)))
+                key = self.key_list[i][j].symbol
+                key[key>=127] = 255
+                if isBlank(key):
+                    self.k_pos.append(j)
+                self.key_list[i][j].cropped = self.crop(key)
                 self.key_ratio[i].append(self.key_list[i][j].cropped.shape[1]/self.key_list[i][j].cropped.shape[0])
+                if self.key_ratio[i][len(self.key_ratio[i])-1]>6:
+                    self.key_ratio[i][len(self.key_ratio[i])-1]=6
                 self.key_size[i].append(self.key_list[i][j].cropped.shape)
                 self.key_list[i][j].cropped = cv2.resize(self.key_list[i][j].cropped,(self.size*self.key_list[i][j].width,self.size))
-                """cv2.imshow('key',cv2.resize(self.key_list[i][j].cropped,(150,150)))
+                cv2.imshow('key',cv2.resize(self.key_list[i][j].cropped,(150,150)))
                 cv2.waitKey(0)
-                cv2.destroyAllWindows()"""
+                cv2.destroyAllWindows()
+                print(self.key_ratio[i][len(self.key_ratio[i])-1])
         #f=open("../src/"+pattern_name+"_written.txt","r")
         for i in range(len(self.pattern)):
             kcount = 0
@@ -275,6 +282,7 @@ class Transfer:
                 tmp_list.append("p"+str(pcount))
             if len(tmp_list)>0:
                 res = ', '.join(tmp_list)
+                #print(res)
                 self.written_pattern.append(res)
                 self.sum_pattern+=len(tmp_list)
         print(self.sum_pattern)       
@@ -297,27 +305,33 @@ class Transfer:
         mean_diff =[abs(np.mean(grid)-np.mean(key[i])) for i in range(len(key))]
 
         grid = self.crop(grid)
-
+        if isBlank(grid):
+            for i in range(len(self.k_pos)):
+                if self.key_avai[width][i]:
+                    return self.k_pos[i]
 
         key = [self.key_list[width][i].cropped for i in range(len(self.key_list[width]))]
         avai = [self.key_avai[width][i] for i in range(len(self.key_list[width]))]
         if len(key)==0:
             return -1
         ratio = grid.shape[1]/grid.shape[0]
+        if ratio>6:
+            ratio = 6
         ratio_diff = [abs(ratio-self.key_ratio[width][i]) for i in range(len(key))]
+        
         sim=[-1e7 for i in range(len(key))]
         grid = cv2.resize(grid,(self.size*width,self.size))
         diff = [abs(np.sum(grid<20)-np.sum(key[i]<20))/(self.size*self.size) for i in range(len(key))]
         for i in range(len(key)):
-            if mean_diff[i]<10 and diff[i]<0.1 and ratio_diff[i] < 0.1 and avai[i]:
+            if mean_diff[i]<10 and diff[i]<0.1 and ratio_diff[i] < 0.1 and avai[i] and not isBlank(key[i]):
                 sim[i]= self.cos(key[i],grid)
 
         if np.max(sim) == -1e7:
             for i in range(len(key)):
-                if avai[i]:
+                if avai[i] and not isBlank(key[i]):
                     sim[i]= self.cos(key[i],grid)
         """cv2.imshow('grid',cv2.resize(grid,(200,200)))
-        cv2.imshow('key',cv2.resize(key[width][np.argmax(sim)],(200,200)))
+        cv2.imshow('key',cv2.resize(key[np.argmax(sim)],(200,200)))
         cv2.waitKey(0)
         cv2.destroyAllWindows()"""
         return np.argmax(sim)
@@ -339,7 +353,7 @@ class Transfer:
         return sim_ver**2+sim_hor**2
     
     def crop(self,rect):
-        if not isBlank(rect):
+        if not isBlank(rect) and not isBlank(~rect):
             y_nonzero, x_nonzero = np.nonzero(rect<200)
             res = rect[np.min(y_nonzero):np.max(y_nonzero), np.min(x_nonzero):np.max(x_nonzero)]
             if res.shape[0] != 0 and res.shape[1]!=0:
