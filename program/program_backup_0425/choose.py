@@ -1,7 +1,8 @@
 import tkinter, tkinter.filedialog
 import sys
 import cv2
-import os, glob
+import os
+import fitz
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
@@ -9,7 +10,6 @@ from pdf2image import convert_from_path
 from skimage.measure import label as tag
 import numpy as np
 import recognition, reader
-import fitz
 
 class Choose:
     
@@ -40,37 +40,26 @@ class Choose:
     def selectPattern(self):
         self.btn = QPushButton(self.form)
         self.btn.setText("Select Pattern")
-        self.btn.setFont(QFont('inconsolata',12))
-        self.btn.setGeometry(int(self.form.width()/2)-50, int(self.form.height()/2)-60, 100, 50)
         self.btn.clicked.connect(self.getPath)
+        self.btn.setGeometry(round(self.w/2-self.w/10),round(self.h/2-25),round(self.w/5),50)
     
     def getPath(self):
         window = tkinter.Tk()
         window.withdraw()     
         self.file_path = tkinter.filedialog.askopenfilename(parent=window,title='Select File', filetypes=(("application/pdf","*.pdf"),("all files","*.*")))
-        if not self.file_path:
-            self.Label = QLabel('You do not select any files. Please select again.', self.form)
-            self.Label.setFont(QFont('inconsolata',10))
-            self.Label.move(int(self.form.width()/2)-100, int(self.form.height()/2))
-            self.Label.show()
-            return
         self.btn.hide()
         self.convert()
     
     def convert(self): # pdf 轉成 一頁一頁
         #convert image
-        #images = convert_from_path(self.file_path,300,poppler_path=r'C:\Program Files\poppler-0.67.0\bin') #DPI       
+        """images = convert_from_path(self.file_path,300,poppler_path=r'C:\Program Files\poppler-0.67.0\bin') #DPI       
         self.path_name = self.file_path.split('/')
-        
-        files = glob.glob('test_image*.png') # 把之前紀錄刪掉
-        if files:
-            for file in files:
-                os.remove(file)
+        #print('file_name:', self.path_name[-1][:-4])
 
-        """for i, image in enumerate(images):
+        for i, image in enumerate(images):
             fname = 'test_image'+str(i+1)+'.png' #path
             image.save(fname, "PNG")"""
-        
+        self.path_name = self.file_path.split('/')
         doc = fitz.open(self.file_path)
         for page_index in range(doc.page_count):
             page = doc.load_page(page_index)  
@@ -78,7 +67,6 @@ class Choose:
             nppix = np.frombuffer(buffer=pix.samples, dtype=np.uint8).reshape((pix.height, pix.width, 3))
             fname = 'test_image'+str(page_index+1)+'.png'
             cv2.imwrite(fname,cv2.cvtColor(nppix,cv2.COLOR_RGB2BGR))
-
         self.choose()
     
     def back(self):
@@ -115,8 +103,6 @@ class Choose:
             self.btns[i].setGeometry(round(self.w/(self.btns_num-2)*i),0,round(self.w/(self.btns_num-2)),50)
         for i in (self.btns_num-2,self.btns_num-1):
             self.btns[i].setGeometry(round(self.w/(self.btns_num-2)*(i-2)),self.h+100,round(self.w/(self.btns_num-2)),50)
-        for i in range(self.btns_num-4, self.btns_num): # set Font
-            self.btns[i].setFont(QFont('inconsolata',10))
         self.btns[0].clicked.connect(self.page_up)
         self.btns[1].clicked.connect(self.page_down)
         self.btns[2].clicked.connect(lambda x : self.rotate("button"))
@@ -230,16 +216,7 @@ class Choose:
         x, y, w, h = cv2.boundingRect(coords)
         print(y,y+h,x,x+w)
         if self.source == "chart":
-            #cv2.imwrite('chart-'+str(self.chart_count)+'.png',self.img[y:y+h,x:x+w])
-            cv2.imwrite('chart.png',self.img[y:y+h,x:x+w])
-            '''if y+h > 1000 :
-                print('do this')
-                replace = cv2.imread('chart-'+str(self.chart_count)+'.png',0)
-                resize_h, resize_w= h*40/100, w*40/100
-                replace = cv2.resize(replace, (int(resize_h), int(resize_w)))
-                os.remove('chart-'+str(self.chart_count)+'.png')
-                cv2.imwrite('chart-'+str(self.chart_count)+'.png', replace)'''
-
+            cv2.imwrite('chart-'+str(self.chart_count)+'.png',self.img[y:y+h,x:x+w])
         elif self.source == "key":
             cv2.imwrite('key.png',self.img[y:y+h,x:x+w])
 

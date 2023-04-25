@@ -200,10 +200,10 @@ class Transfer:
         json_file.close()
         return True"""
     def read_chart(self):
-        path = pathlib.Path("./chart.png")
+        path = pathlib.Path("./chart-1.png")
         if not path.exists():
             return False
-        self.original = cv2.imread('./chart.png',cv2.IMREAD_GRAYSCALE)
+        self.original = cv2.imread('./chart-1.png',cv2.IMREAD_GRAYSCALE)
         self.grid = self.find_stats(self.original,"chart")
         if len(self.grid) == 0:
             return False
