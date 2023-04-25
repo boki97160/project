@@ -237,10 +237,10 @@ class Transfer:
                     self.key_ratio[i][len(self.key_ratio[i])-1]=6
                 self.key_size[i].append(self.key_list[i][j].cropped.shape)
                 self.key_list[i][j].cropped = cv2.resize(self.key_list[i][j].cropped,(self.size*self.key_list[i][j].width,self.size))
-                cv2.imshow('key',cv2.resize(self.key_list[i][j].cropped,(150,150)))
+                """cv2.imshow('key',cv2.resize(self.key_list[i][j].cropped,(150,150)))
                 cv2.waitKey(0)
                 cv2.destroyAllWindows()
-                print(self.key_ratio[i][len(self.key_ratio[i])-1])
+                print(self.key_ratio[i][len(self.key_ratio[i])-1])"""
         #f=open("../src/"+pattern_name+"_written.txt","r")
         for i in range(len(self.pattern)):
             kcount = 0
