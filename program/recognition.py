@@ -305,7 +305,7 @@ class Transfer:
         mean_diff =[abs(np.mean(grid)-np.mean(key[i])) for i in range(len(key))]
 
         grid = self.crop(grid)
-        if isBlank(grid):
+        if isBlank(grid): # here has problem
             for i in range(len(key)):
                 if self.key_avai[i] and i in self.k_pos:
                     return i

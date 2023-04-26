@@ -60,7 +60,7 @@ class Choose:
         if not self.file_path:
             self.Label = QLabel('You do not select any files. Please select again.', self.form)
             self.Label.setFont(QFont('inconsolata',10))
-            self.Label.move(int(self.form.width()/2)-100, int(self.form.height()/2))
+            self.Label.move(100, int(self.form.height()/2))
             self.Label.show()
             return
         self.btn.hide()
