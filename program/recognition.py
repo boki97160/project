@@ -306,9 +306,11 @@ class Transfer:
 
         grid = self.crop(grid)
         if isBlank(grid):
-            for i in range(len(self.k_pos)):
-                if self.key_avai[width][i]:
-                    return self.k_pos[i]
+            for i in range(len(key)):
+                if self.key_avai[i] and i in self.k_pos:
+                    return i
+        
+        
 
         key = [self.key_list[width][i].cropped for i in range(len(self.key_list[width]))]
         avai = [self.key_avai[width][i] for i in range(len(self.key_list[width]))]
