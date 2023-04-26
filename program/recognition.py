@@ -322,14 +322,22 @@ class Transfer:
         sim=[-1e7 for i in range(len(key))]
         grid = cv2.resize(grid,(self.size*width,self.size))
         diff = [abs(np.sum(grid<20)-np.sum(key[i]<20))/(self.size*self.size) for i in range(len(key))]
+
         for i in range(len(key)):
             if mean_diff[i]<10 and diff[i]<0.1 and ratio_diff[i] < 0.1 and avai[i] and not isBlank(key[i]):
                 sim[i]= self.cos(key[i],grid)
 
         if np.max(sim) == -1e7:
             for i in range(len(key)):
+                if avai[i] and not isBlank(key[i]) and diff[i]<0.2 and mean_diff[i]<20:
+                    sim[i]= self.cos(key[i],grid)
+
+        if np.max(sim) == -1e7:
+            for i in range(len(key)):
                 if avai[i] and not isBlank(key[i]):
                     sim[i]= self.cos(key[i],grid)
+
+
         """cv2.imshow('grid',cv2.resize(grid,(200,200)))
         cv2.imshow('key',cv2.resize(key[np.argmax(sim)],(200,200)))
         cv2.waitKey(0)
@@ -337,6 +345,11 @@ class Transfer:
         return np.argmax(sim)
     
     def cos(self,key,grid):
+        dist = []
+        one = [1 for i in range(grid.shape[0])]
+        for i in range(grid.shape[0]):
+            dist.append(1-cosine(grid[i],key[i]))
+        sim_hor = 1-cosine(one,dist)
         transpose_grid = grid.transpose()
         transpose_key = key.transpose()
         dist = []
@@ -344,13 +357,8 @@ class Transfer:
         for i in range(grid.shape[1]):
             dist.append(1-cosine(transpose_grid[i],transpose_key[i]))
         sim_ver = 1-cosine(one,dist)
-        sim_hor = 1
-        dist = []
-        one = [1 for i in range(grid.shape[0])]
-        for i in range(grid.shape[0]):
-            dist.append(1-cosine(grid[i],key[i]))
-        sim_hor = 1-cosine(one,dist)
-        return sim_ver**2+sim_hor**2
+        
+        return sim_ver**2+sim_hor
     
     def crop(self,rect):
         if not isBlank(rect) and not isBlank(~rect):
