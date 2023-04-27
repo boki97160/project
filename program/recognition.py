@@ -65,7 +65,7 @@ class Transfer:
                     max_label=i
             if max_label>0:
                 table[labeled!=max_label]=0
-            cv2.imwrite('table.png',table)
+        cv2.imwrite('table.png',table)
         stats= cv2.connectedComponentsWithStats(~table,connectivity=4,ltype=cv2.CV_32S)[2][2:]
         return stats
     def __init__(self):
@@ -118,39 +118,6 @@ class Transfer:
                 self.key_avai[self.key_width[i]].append(True) 
         json_file.close()
         return True
-    """def find_keys(self,original_keys):
-        #img = self.find_table()
-        img = self.find_table(cv2.threshold(original_keys,250,255,cv2.THRESH_BINARY_INV)[1])
-        cnts, _ = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        temp = img.copy()
-        self.temp = cv2.cvtColor(temp,cv2.COLOR_GRAY2BGR)
-        cnts = reversed(cnts)
-        self.key_count = 0
-        for cnt in cnts:
-            peri = cv2.arcLength(cnt, True)
-            cnt = cv2.approxPolyDP(cnt,0.05*peri,True)
-            if len(cnt) == 4 and cv2.isContourConvex(cnt):
-                
-                x,y,w,h = cv2.boundingRect(cnt)
-                width = round(w/h)
-                rect = original_keys[y:y+h,x:x+w]
-                if width < 10 and width>=1:
-                    cv2.rectangle(self.temp,(x,y),(x+w,y+h),(0,255,0),2)
-                    table = self.find_table(cv2.threshold(rect,250,255,cv2.THRESH_BINARY_INV)[1])
-                    cv2.imshow('table',table)
-                    stats= cv2.connectedComponentsWithStats(~table,connectivity=4,ltype=cv2.CV_32S)[2][2:]
-                    img_copy = rect.copy()
-                    for x,y,w,h,area in stats:
-                        cv2.rectangle(img_copy,(x,y),(x+w,y+h),(0,255,0),2)
-                    cv2.imshow('temp',img_copy)
-                    cv2.waitKey(0)""""""rect = original_keys[y:y+h,x:x+w]
-        
-        self.key_img.append(rect)
-        self.key_width.append(width)
-        cv2.imwrite(str(self.key_count)+'.png',rect)
-        
-        #cv2.rectangle(temp,(np.min(y_nonzero),np.max(y_nonzero)),(np.min(x_nonzero),np.max(y_nonzero)),(0,255,0),2)
-        self.key_count+=1   """
 
         
     def read_keys(self,app):
@@ -173,32 +140,10 @@ class Transfer:
         self.data = {}
         self.data["width"]=self.key_width
         self.data["key_count"] = self.key_count
-
         json.dump(self.data,json_file)
         json_file.close()
         return True  
-    """def read_keys(self,app):
-        
-        
-        path = pathlib.Path("./key.png")
-        if not path.exists():
-            return False
-        
-        original_keys = cv2.imread('./key.png',cv2.IMREAD_GRAYSCALE)
-
-        #keys = cv2.bitwise_and(table,self.find_keys(original_keys)) 
-        self.find_keys(original_keys)
-        
-        cv2.imshow('result',self.temp)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
-        json_file = open("./key_content.json","w+")
-        self.data = {}
-        self.data["width"]=self.key_width
-        self.data["key_count"] = self.key_count
-        json.dump(self.data,json_file)
-        json_file.close()
-        return True"""
+    
     def read_chart(self):
         path = pathlib.Path("./chart.png")
         if not path.exists():
@@ -282,16 +227,14 @@ class Transfer:
                 tmp_list.append("p"+str(pcount))
             if len(tmp_list)>0:
                 res = ', '.join(tmp_list)
+                print(res)
                 #print(res)
                 self.written_pattern.append(res)
-                self.sum_pattern+=len(tmp_list)
         print(self.sum_pattern)       
         return True
     def compare_grid(self,grid):
         if grid.shape[0]<0.8*self.size or grid.shape[1]<0.8*self.size:
             return "",0
-        """if(isBlank(grid)):
-            return "k",0"""
         
         width = round(grid.shape[1]/grid.shape[0])
         if width > 10:
@@ -307,7 +250,7 @@ class Transfer:
         grid = self.crop(grid)
         if isBlank(grid): # here has problem
             for i in range(len(key)):
-                if self.key_avai[i] and i in self.k_pos:
+                if self.key_avai[width][i] and i in self.k_pos:
                     return i
         
         
@@ -326,19 +269,13 @@ class Transfer:
         diff = [abs(np.sum(grid<20)-np.sum(key[i]<20))/(self.size*self.size) for i in range(len(key))]
 
         for i in range(len(key)):
-            if mean_diff[i]<10 and diff[i]<0.1 and ratio_diff[i] < 0.1 and avai[i] and not isBlank(key[i]):
+            if mean_diff[i]<20 and diff[i]<0.2 and ratio_diff[i] < 0.2 and avai[i] and not isBlank(key[i]):
                 sim[i]= self.cos(key[i],grid)
-
-        if np.max(sim) == -1e7:
-            for i in range(len(key)):
-                if avai[i] and not isBlank(key[i]) and diff[i]<0.2 and mean_diff[i]<20:
-                    sim[i]= self.cos(key[i],grid)
 
         if np.max(sim) == -1e7:
             for i in range(len(key)):
                 if avai[i] and not isBlank(key[i]):
                     sim[i]= self.cos(key[i],grid)
-
 
         """cv2.imshow('grid',cv2.resize(grid,(200,200)))
         cv2.imshow('key',cv2.resize(key[np.argmax(sim)],(200,200)))
@@ -372,35 +309,6 @@ class Transfer:
                 return rect
         else:
             return rect
-
-    """def clear_border(self,screenshot):
-        next_grid = self.crop(~cv2.threshold(screenshot,250,255,cv2.THRESH_BINARY_INV)[1])
-        while True:
-            cv2.imshow('screenshot',cv2.resize(next_grid,(200,200)))
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
-            if isBlank(next_grid):
-                return next_grid
-            next_grid = self.crop(~next_grid)
-            
-        return next_grid"""
-    """def crop(self,screenshot):
-        if(isBlank(screenshot)):
-            return cv2.threshold(screenshot,250,255,cv2.THRESH_BINARY_INV)[1]
-        img = cv2.threshold(screenshot,250,255,cv2.THRESH_BINARY_INV)[1]
-        for i in range(9,5,-1):
-            if np.mean(img)!=0:
-                break
-            img =  cv2.threshold(screenshot,25*i,255,cv2.THRESH_BINARY_INV)[1]         
-        cnts, _ = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        cnts = np.concatenate(cnts)
-        x, y, w, h = cv2.boundingRect(cnts)
-        cv2.rectangle(self.img_copy,(x,y),(x+w,y+h),(0,255,0),2)
-        cv2.imshow('screenshot',cv2.resize(screenshot,(200,200)))
-        cv2.imshow('border',cv2.resize(self.img_copy,(200,200)))
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
-        return screenshot[y:y+h,x:x+w]"""
 
 if __name__ == "__main__":
     Transfer()
