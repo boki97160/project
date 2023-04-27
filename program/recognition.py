@@ -32,10 +32,13 @@ class Transfer:
     key_size = [[] for i in range(20)]
     key_avai = [[] for i in range(20)]
     stitch_content = [[] for i in range(20)]
+    stitch_increase = []
     key_width = []
     key_img = []
     written_pattern = []
     k_pos = []
+    row_pos=[]
+    row_height=[]
     def find_table(self,src):
         kernel = cv2.getStructuringElement(cv2.MORPH_CROSS,(scale,1))
         result1 = cv2.morphologyEx(src, cv2.MORPH_OPEN, kernel)
@@ -95,11 +98,19 @@ class Transfer:
             self.reader.data_empty(app)
             return
         json_file = open("./chart.json","w+")
-        data = {"pattern":self.written_pattern,"WS":self.WS}
+        print(self.stitch_increase)
+        data = {"pattern":self.written_pattern,"WS":self.WS,"increase":self.stitch_increase}
         json.dump(data,json_file)
         json_file.close()
         json_file = open("./pos.json","w+")
         json.dump(self.rec,json_file)
+        json_file.close()
+        json_file = open("./row_infor.json","w+")
+        print(type(self.row_pos),type(self.row_height))
+        print(self.row_pos)
+        print(self.row_height)
+        data = {'row_pos':self.row_pos,'row_height':self.row_height}
+        json.dump(data ,json_file)
         json_file.close()
         
         # start read
@@ -133,7 +144,6 @@ class Transfer:
         
         original_keys = cv2.imread('./key.png',cv2.IMREAD_GRAYSCALE)
         keys = self.find_stats(original_keys,"key")
-        keycopy = cv2.imread('./key.png')
         self.key_count = 0
         for x,y,w,h,area in keys: 
             width = round(w/h)
@@ -141,10 +151,7 @@ class Transfer:
                 self.key_img.append(original_keys[y:y+h,x:x+w])
                 self.key_width.append(width)
                 cv2.imwrite(str(self.key_count)+'.png',original_keys[y:y+h,x:x+w])
-                cv2.rectangle(keycopy,(x,y),(x+w,y+h),(0,255,0),3)
                 self.key_count+=1
-        cv2.imshow('copy',keycopy)
-        cv2.waitKey(0)
         json_file = open("./key_content.json","w+")
         self.data = {}
         self.data["width"]=self.key_width
@@ -168,17 +175,28 @@ class Transfer:
     def split(self):
         tmp_list = []
         dist = 12
-        last_y=-1
+        
+        last_y= self.grid[0][1]
+        last_h = self.grid[0][3]
         for now in self.grid:
             x,y,w,h,area = now
+            
             if(abs(y-last_y)>dist):
-                last_y=y
+                
+                self.row_pos.append(int(last_y))
+                self.row_height.append(int(last_h))
+                last_y= y
+                last_h = h
                 tmp_list.sort(reverse=True,key=lambda x:(x[0]))
                 self.pattern.append(tmp_list)
+                
                 tmp_list=[]
             tmp_list.append(now)
+        self.row_pos.append(int(last_y))
+        self.row_height.append(int(last_h))
         tmp_list.sort(reverse=True,key=lambda x:(x[0]))
         self.pattern.append(tmp_list)
+
         self.pattern = self.pattern[::-1]
     def traversal(self):
         for i in range(len(self.key_list)):
@@ -243,8 +261,8 @@ class Transfer:
                 res = ', '.join(tmp_list)
                 #print(res)
                 self.written_pattern.append(res)
-                
-                print(stitch_inc)
+                self.stitch_increase.append(stitch_inc)
+                #print(stitch_inc)
         print(self.sum_pattern)
 
         return True

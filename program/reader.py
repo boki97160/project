@@ -113,37 +113,47 @@ class Reader():
        
     def getdata(self):
         if len(self.history) == 0 :
-            chart, pos= 'chart.json', 'pos.json'
+            chart, pos, self.row_infor= 'chart.json', 'pos.json', 'row_infor.json'
             self.path = 'chart.png'
         else : #history
             chart = 'HistoryRecord/'+ self.history + '/chart.json'
             pos = 'HistoryRecord/' + self.history + '/pos.json'
+            self.row_infor = 'HistoryRecord/' + self.history + '/row_infor.json'
             self.path = 'HistoryRecord/' + self.history + '/chart.png'
             
         with open(chart, 'r') as j:
             data = json.loads(j.read())
         self.chart = data["pattern"]
         self.WS = data["WS"]
+        
         with open(pos, 'r') as j:
             self.rec = json.loads(j.read())
+        
     
     def calcRowHeight(self):
         #print('path:', self.path)
 
-        img = cv2.imread(self.path,0)       
+        """img = cv2.imread(self.path,0)       
         img = cv2.resize(img,(self.w,self.h))
         ret, src= cv2.threshold(img,250,255,cv2.THRESH_BINARY_INV)
         kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(30,1))
         result = cv2.morphologyEx(src, cv2.MORPH_OPEN, kernel)
         ret,labels,rowStats,centroids = cv2.connectedComponentsWithStats(~result,connectivity=4,ltype=cv2.CV_32S)
-        self.rowStats = rowStats[1:]
-        self.rowPos = [block[1] for block in self.rowStats if block[3] > 12]
-        self.rowHeight = [block[3] for block in self.rowStats if block[3] > 12]
+        self.rowStats = rowStats[1:]"""
+        with open(self.row_infor,'r') as j:
+            data = json.loads(j.read())
+        self.rowPos = data['row_pos']
+        self.rowHeight = data['row_height']
+        print(self.rowPos)
+        self.rowPos=[round(pos*self.h/self.original[1]) for pos in self.rowPos]
+        print(self.rowHeight)
+        self.rowHeight = [round(height*self.h/self.original[1]) for height in self.rowHeight]
         self.rowCount = len(self.rowPos)
         if self.WS == False:
             self.total_row = self.rowCount*2
         else:
             self.total_row = self.rowCount
+
         self.hmean = round(self.h/len(self.rowPos))
         return
     def choose_grid(self,x,y):
