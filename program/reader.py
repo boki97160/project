@@ -153,7 +153,7 @@ class Reader():
             self.total_row = self.rowCount*2
         else:
             self.total_row = self.rowCount
-
+        print(self.rowCount)
         self.hmean = round(self.h/len(self.rowPos))
         return
     def choose_grid(self,x,y):
@@ -210,17 +210,17 @@ class Reader():
         self.pointer.setGeometry(self.w+20, self.rowPos[self.pos]+10, self.hmean, self.rowHeight[self.pos])
     
     def setBar(self):
-        self.row = self.rowCount-self.pos
+        self.row = self.rowCount-self.pos-1
         
         if self.WS == False:
             if self.now %2 == 0:
-                self.now = 2*self.row-1
+                self.now = 2*self.row+1
             else:
-                self.now = 2*(self.row-1)
+                self.now = 2*self.row
             if self.now == 0:
                 self.now = self.total_row
         else:
-            self.now = self.row
+            self.now = self.row+1
         print(self.now,self.row)
         #self.rowLabel.setText(str(self.row))
         #self.patternText.setText(written[self.row-1])
@@ -232,7 +232,7 @@ class Reader():
         else:
             self.barLabel.setGeometry(self.barLabel.x(),self.rowPos[self.pos]+10,self.barLabel.width(),self.rowHeight[self.pos])
             self.pointer.setGeometry(self.pointer.x(),self.rowPos[self.pos]+10,self.pointer.width(),self.rowHeight[self.pos])
-            self.patternText.setText("Row "+str(self.now)+": "+self.chart[self.row-1])
+            self.patternText.setText("Row "+str(self.now)+": "+self.chart[self.row])
         if self.now%2==0:
             self.barLabel.setPixmap(self.pink_bar)
         else:

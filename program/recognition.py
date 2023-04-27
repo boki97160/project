@@ -192,8 +192,6 @@ class Transfer:
                 
                 tmp_list=[]
             tmp_list.append(now)
-        self.row_pos.append(int(last_y))
-        self.row_height.append(int(last_h))
         tmp_list.sort(reverse=True,key=lambda x:(x[0]))
         self.pattern.append(tmp_list)
 
