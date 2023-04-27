@@ -1,4 +1,4 @@
-import sys, os, cv2
+import sys, os
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QFileDialog, QLabel, QVBoxLayout
 from PyQt5.QtGui import *
@@ -70,7 +70,6 @@ class History(QtWidgets.QWidget):
         else : 
             #filename, filetype = QFileDialog.getOpenFileName(self, "select HistoryRecord", history_dir)                
             history_folder_path = QFileDialog.getExistingDirectory(self, "select HistoryRecordFolder", "HistoryRecord")
-            #print(history_folder_path)
             if not history_folder_path:
                 self.content = QLabel('You do not select any history. Please check your choice again', self)
                 #self.content.setFont(QFont('inconsolata',10))
@@ -82,19 +81,10 @@ class History(QtWidgets.QWidget):
                 self.content.move(5,150)
                 self.content.show()
                 return 
-            else : 
-                # 要檢查圖片的size
+            else :                
                 history_folder_path = history_folder_path.split('/')[-1]        
-                self.checkimg = cv2.imread('HistoryRecord/'+history_folder_path+'/chart.png')
-                h = self.checkimg.shape[0]
-                  
                 self.close()
                 self.reader = reader.Reader()
-                if h > 1000:
-                    self.reader.showfrom_resize('True')
-                else:
-                    self.reader.showfrom_resize('False')
-                 
                 self.reader.historypath(history_folder_path)
                 self.reader.getdata()
                 self.reader.initUI(app)

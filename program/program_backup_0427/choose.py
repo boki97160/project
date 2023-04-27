@@ -60,7 +60,7 @@ class Choose:
         if not self.file_path:
             self.Label = QLabel('You do not select any files. Please select again.', self.form)
             self.Label.setFont(QFont('inconsolata',10))
-            self.Label.move(int(self.form.width()/2)-100, int(self.form.height()/2))
+            self.Label.move(100, int(self.form.height()/2))
             self.Label.show()
             return
         self.btn.hide()
@@ -250,12 +250,13 @@ class Choose:
         if self.source == "chart":
             #cv2.imwrite('chart-'+str(self.chart_count)+'.png',self.img[y:y+h,x:x+w])
             cv2.imwrite('chart.png',self.img[y:y+h,x:x+w])
-            if y+h > 1000 :
-                print('the size is over')
-                self.reader.showfrom_resize('True')
-            else:
-                print('the size is not over')
-                self.reader.showfrom_resize('False')
+            '''if y+h > 1000 :
+                print('do this')
+                replace = cv2.imread('chart-'+str(self.chart_count)+'.png',0)
+                resize_h, resize_w= h*40/100, w*40/100
+                replace = cv2.resize(replace, (int(resize_h), int(resize_w)))
+                os.remove('chart-'+str(self.chart_count)+'.png')
+                cv2.imwrite('chart-'+str(self.chart_count)+'.png', replace)'''
 
         elif self.source == "key":
             cv2.imwrite('key.png',self.img[y:y+h,x:x+w])

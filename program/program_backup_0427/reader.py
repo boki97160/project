@@ -15,7 +15,6 @@ class Reader():
         self.history = ''
         self.grid_labels={}
         self.choosen = ''
-        self.formsize = ''
 
     def historypath(self,filename): # for history.py
         self.history = filename
@@ -197,7 +196,7 @@ class Reader():
         self.pointer = QLabel(self.form)
         self.pointer.setText(str(self.row))
         self.pointer.setFont(QFont('inconsolata',round(self.hmean/2.5)))
-        self.pointer.setGeometry(self.w+20, self.rowPos[self.pos]+10, self.hmean, self.rowHeight[self.pos])
+        self.pointer.setGeometry(self.w+20,self.rowPos[self.pos]+10,self.hmean,self.rowHeight[self.pos])
     
     def setBar(self):
         self.row = self.rowCount-self.pos
@@ -277,8 +276,8 @@ class Reader():
         QFontDatabase.addApplicationFont("./font/Inconsolata-VariableFont_wdth,wght.ttf")
         self.buttons = [QPushButton(self.form) for i in range(len(imagePath))]
         for i in range(len(imagePath)):
-            pos=i*(self.hmean+10)+25            
-            self.buttons[i].setGeometry(self.w+self.hmean+20, pos, self.hmean, self.hmean)
+            pos=i*(self.hmean+10)+25
+            self.buttons[i].setGeometry(self.w+self.hmean+20,pos,self.hmean,self.hmean)
             #self.buttons[i].setIcon(QIcon(imagePath[i]))
             self.buttons[i].setText(textSet[i])
         
@@ -298,48 +297,20 @@ class Reader():
         self.display_choice = QLabel(self.form)
         self.display_choice.setFont(QFont('inconsolata',round(self.hmean/2.5)))
         self.display_choice.setAlignment(Qt.AlignCenter)
-        self.display_choice.setGeometry(self.w+10,6*(self.hmean+10)+25,100,self.hmean)      
-        
+        self.display_choice.setGeometry(self.w+10,6*(self.hmean+10)+25,100,self.hmean)
+        self.patternText = QLabel(self.form)
         self.stscount.setFont(QFont('inconsolata',round(self.hmean/2.5)))
         self.stscount.move(self.w+self.hmean+20,self.buttons[1].y())
-        
-        self.patternText = QLabel(self.form)
         self.patternText.setFont(QFont('inconsolata',round(self.hmean/4)))
         self.patternText.setGeometry(10,self.h+10,self.w,self.hmean)
         self.patternText.setText("Row 1: "+self.chart[0])
         
-        self.drawBar()        
-        if ( self.formsize == 'False' ) :
-            self.form.resize(self.hmean*3+self.w, self.h+75)          
-        else :
-            self.form.resize(self.hmean*15+self.w, self.h+150)
-            #self.stscount.setFont(QFont('inconsolata',round(self.hmean/2.5)*5))
-            self.stscount.setStyleSheet('''
-                font-size:16px;
-            ''')
-            self.display_choice.setGeometry(self.w+10,self.h-100,100,self.hmean)
-            self.display_choice.setStyleSheet('''
-                font-size:20px;
-            ''')
-            self.patternText.setGeometry(10,self.h+20,self.w,self.hmean)    
-            self.patternText.setStyleSheet('''
-                font-size: 14px;
-            ''')
-            self.pointer.setStyleSheet('''
-                font-size:16px;
-            ''')
-            for i in range(len(imagePath)):
-                pos=i*(self.hmean+10)+25
-                self.buttons[i].setGeometry(self.w+self.hmean+50, pos*2, self.hmean*4, self.hmean*4)
-        
-        # Here show #
+        self.drawBar()
+        self.form.resize(self.hmean*3+self.w,self.h+75)
         self.form.show()
+
         self.patternLabel.mousePressEvent = self.detect
         self.barLabel.mousePressEvent = self.detect_onbar
-    
-    def showfrom_resize(self, value):
-        self.formsize = value
-    
     def data_empty(self,app):
         #TODO: back button
         self.app = app

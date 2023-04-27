@@ -7,7 +7,7 @@ import subprocess
 import sys
 import json
 from skimage.measure import label as tag
-scale = 30
+scale = 35
 
 
 def isBlank(grid):
@@ -31,6 +31,7 @@ class Transfer:
     key_ratio = [[] for i in range(20)]
     key_size = [[] for i in range(20)]
     key_avai = [[] for i in range(20)]
+    stitch_content = [[] for i in range(20)]
     key_width = []
     key_img = []
     written_pattern = []
@@ -65,8 +66,11 @@ class Transfer:
                     max_label=i
             if max_label>0:
                 table[labeled!=max_label]=0
-        cv2.imwrite('table.png',table)
-        stats= cv2.connectedComponentsWithStats(~table,connectivity=4,ltype=cv2.CV_32S)[2][2:]
+            stats= cv2.connectedComponentsWithStats(~table,connectivity=4,ltype=cv2.CV_32S)[2][1:]
+        else:
+            
+            cv2.imwrite('table.png',table)
+            stats= cv2.connectedComponentsWithStats(~table,connectivity=4,ltype=cv2.CV_32S)[2][2:]
         return stats
     def __init__(self):
         pass
@@ -106,12 +110,13 @@ class Transfer:
         json_file = open("./key_content.json","r+")
         self.data = json.load(json_file)
         self.key_content = self.data['abbr']
-        self.stitch_content = self.data['sts']
+        stitch_content = self.data['sts']
         for i in range(len(self.key_content)):
             self.rec[self.key_content[i]] = []
-            self.stitch_content[i] = int(self.stitch_content[i])
+            
             key = Key(self.key_content[i],self.key_img[i],self.key_width[i])
             self.key_list[self.key_width[i]].append(key)
+            self.stitch_content[self.key_width[i]].append(int(stitch_content[i]))
             if self.key_content[i] == "":
                 self.key_avai[self.key_width[i]].append(False)
             else:
@@ -128,14 +133,18 @@ class Transfer:
         
         original_keys = cv2.imread('./key.png',cv2.IMREAD_GRAYSCALE)
         keys = self.find_stats(original_keys,"key")
+        keycopy = cv2.imread('./key.png')
         self.key_count = 0
         for x,y,w,h,area in keys: 
             width = round(w/h)
-            if width < 10 and width>=1 and h>self.size*0.9 and w>self.size*0.9: #small unwanted slice
+            if width < 10 and width>=1 and h>scale*0.9 and w>scale*width*0.9: #small unwanted slice
                 self.key_img.append(original_keys[y:y+h,x:x+w])
                 self.key_width.append(width)
                 cv2.imwrite(str(self.key_count)+'.png',original_keys[y:y+h,x:x+w])
+                cv2.rectangle(keycopy,(x,y),(x+w,y+h),(0,255,0),3)
                 self.key_count+=1
+        cv2.imshow('copy',keycopy)
+        cv2.waitKey(0)
         json_file = open("./key_content.json","w+")
         self.data = {}
         self.data["width"]=self.key_width
@@ -150,6 +159,8 @@ class Transfer:
             return False
         self.original = cv2.imread('./chart.png',cv2.IMREAD_GRAYSCALE)
         self.grid = self.find_stats(self.original,"chart")
+        if self.grid[0][4] > 10*np.mean(self.grid[:,4]):
+            self.grid = self.grid[1:]
         if len(self.grid) == 0:
             return False
         self.size = round(np.mean(self.grid[:,3]))
@@ -197,11 +208,14 @@ class Transfer:
                 x,y,w,h,area = self.pattern[i][j]
                 g=self.original[y:y+h,x:x+w]         
                 content, stitch = self.compare_grid(g)
+                stitch_inc+=stitch
+                
                 if content == "error":
                     continue
                 if content!="":
+                    self.sum_pattern+=1
                     self.rec[content].append([int(x),int(y),int(x+w),int(y+h)])
-                    stitch_inc+=stitch
+                    
                     flag = False
                     if content == "k":
                         kcount+=1;
@@ -227,10 +241,12 @@ class Transfer:
                 tmp_list.append("p"+str(pcount))
             if len(tmp_list)>0:
                 res = ', '.join(tmp_list)
-                print(res)
                 #print(res)
                 self.written_pattern.append(res)
-        print(self.sum_pattern)       
+                
+                print(stitch_inc)
+        print(self.sum_pattern)
+
         return True
     def compare_grid(self,grid):
         if grid.shape[0]<0.8*self.size or grid.shape[1]<0.8*self.size:
@@ -242,7 +258,7 @@ class Transfer:
         res = self.cmpsim(grid,width)
         if res == -1:
             return "error",0
-        return [self.key_list[width][res].abbr, self.stitch_content[res]]
+        return [self.key_list[width][res].abbr, self.stitch_content[width][res]]
     def cmpsim(self,grid,width):
         key = [self.key_list[width][i].symbol for i in range(len(self.key_list[width]))]
         mean_diff =[abs(np.mean(grid)-np.mean(key[i])) for i in range(len(key))]
