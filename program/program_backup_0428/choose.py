@@ -19,7 +19,6 @@ class Choose:
         self.rec = recognition.Transfer()
         self.reader = reader.Reader()
         self.form = QWidget()
-        self.formsize = ''
         self.init_data()
         #sys.exit(self.app.exec_())
     
@@ -103,10 +102,7 @@ class Choose:
     
     def next(self):
         #TODO :change to input.py 
-        img = cv2.imread('chart.png', 1)
-        h = img.shape[0]
-        self.formsize = 'True' if h>1000 else 'False'
-        self.rec.process(self.app,self.WS,self.path_name[-1][:-4],self.formsize)
+        self.rec.process(self.app,self.WS,self.path_name[-1][:-4])
         self.form.hide()
     
     def choose(self):
@@ -254,12 +250,12 @@ class Choose:
         if self.source == "chart":
             #cv2.imwrite('chart-'+str(self.chart_count)+'.png',self.img[y:y+h,x:x+w])
             cv2.imwrite('chart.png',self.img[y:y+h,x:x+w])
-            '''if y+h > 1000 :
+            if y+h > 1000 :
                 print('the size is over')
-                self.formsize = 'True'
+                self.reader.showfrom_resize('True')
             else:
                 print('the size is not over')
-                self.formsize = 'False'''
+                self.reader.showfrom_resize('False')
 
         elif self.source == "key":
             cv2.imwrite('key.png',self.img[y:y+h,x:x+w])

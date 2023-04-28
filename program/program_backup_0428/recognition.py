@@ -77,10 +77,9 @@ class Transfer:
         return stats
     def __init__(self):
         pass
-    def process(self,app,ws,historyname,formsize):
+    def process(self,app,ws,historyname):
         self.WS = ws
         self.reader = reader.Reader()
-        self.reader.showfrom_resize(formsize)
         if self.read_chart() == False:
             print("chart")
             self.reader.data_empty(app)
@@ -193,7 +192,8 @@ class Transfer:
                 
                 tmp_list=[]
             tmp_list.append(now)
-        
+        self.row_pos.append(int(last_y))
+        self.row_height.append(int(last_h))
         tmp_list.sort(reverse=True,key=lambda x:(x[0]))
         self.pattern.append(tmp_list)
 

@@ -48,6 +48,7 @@ class Reader():
         #print('historyfile = ', self.historyfile)
         if os.path.isdir(self.historyfile):
             self.leavebutton.setText('This history has exist. click it to show pattern')
+            
             content = 'click this button to show chart'
         else:
             os.mkdir(self.historyfile)
@@ -61,7 +62,7 @@ class Reader():
         self.text = QLabel(content,self.interface)
         self.text.setStyleSheet('''
             font-size:12px;
-            font-family: inconsolata;
+            font-familiy: inconsolata;
         ''')
         self.text.setAlignment(Qt.AlignCenter)            
         layout.addWidget(self.text)
@@ -152,7 +153,7 @@ class Reader():
             self.total_row = self.rowCount*2
         else:
             self.total_row = self.rowCount
-        print(self.rowCount)
+
         self.hmean = round(self.h/len(self.rowPos))
         return
     def choose_grid(self,x,y):
@@ -209,17 +210,17 @@ class Reader():
         self.pointer.setGeometry(self.w+20, self.rowPos[self.pos]+10, self.hmean, self.rowHeight[self.pos])
     
     def setBar(self):
-        self.row = self.rowCount-self.pos-1
+        self.row = self.rowCount-self.pos
         
         if self.WS == False:
             if self.now %2 == 0:
-                self.now = 2*self.row+1
+                self.now = 2*self.row-1
             else:
-                self.now = 2*self.row
+                self.now = 2*(self.row-1)
             if self.now == 0:
                 self.now = self.total_row
         else:
-            self.now = self.row+1
+            self.now = self.row
         print(self.now,self.row)
         #self.rowLabel.setText(str(self.row))
         #self.patternText.setText(written[self.row-1])
@@ -231,7 +232,7 @@ class Reader():
         else:
             self.barLabel.setGeometry(self.barLabel.x(),self.rowPos[self.pos]+10,self.barLabel.width(),self.rowHeight[self.pos])
             self.pointer.setGeometry(self.pointer.x(),self.rowPos[self.pos]+10,self.pointer.width(),self.rowHeight[self.pos])
-            self.patternText.setText("Row "+str(self.now)+": "+self.chart[self.row])
+            self.patternText.setText("Row "+str(self.now)+": "+self.chart[self.row-1])
         if self.now%2==0:
             self.barLabel.setPixmap(self.pink_bar)
         else:
